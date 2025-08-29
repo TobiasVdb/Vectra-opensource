@@ -14,6 +14,6 @@ export default defineConfig({
     },
   },
   preview: {
-    allowedHosts: ['vectra-v734a.ondigitalocean.app'],
+    allowedHosts: ['vectra-v734a.ondigitalocean.app', 'vectra-open-tkq6e.ondigitalocean.app'],
   },
 });
