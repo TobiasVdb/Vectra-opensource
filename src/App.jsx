@@ -226,8 +226,9 @@ export default function App() {
     mapRef.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: currentStyle.style,
-      center: [0, 0],
-      zoom: 2,
+      center: [4.4699, 50.5039],
+      zoom: 7,
+      pitch: mapMode === '2d' ? 0 : 60,
       attributionControl: false
     });
     mapRef.current.on('load', () => {
