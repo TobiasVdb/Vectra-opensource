@@ -107,10 +107,36 @@ export default function App() {
   const layerFeaturesRef = useRef({});
   const [selected, setSelected] = useState(null);
   const [showDialog, setShowDialog] = useState(true);
+  const [manualStartLat, setManualStartLat] = useState('');
+  const [manualStartLng, setManualStartLng] = useState('');
   const [manualLat, setManualLat] = useState('');
   const [manualLng, setManualLng] = useState('');
+  const [startLatError, setStartLatError] = useState('');
+  const [startLngError, setStartLngError] = useState('');
   const [latError, setLatError] = useState('');
   const [lngError, setLngError] = useState('');
+
+  function handleManualStartLatChange(e) {
+    const value = e.target.value;
+    setManualStartLat(value);
+    const num = parseFloat(value);
+    if (isNaN(num) || num < -90 || num > 90) {
+      setStartLatError('Latitude must be between -90 and 90');
+    } else {
+      setStartLatError('');
+    }
+  }
+
+  function handleManualStartLngChange(e) {
+    const value = e.target.value;
+    setManualStartLng(value);
+    const num = parseFloat(value);
+    if (isNaN(num) || num < -180 || num > 180) {
+      setStartLngError('Longitude must be between -180 and 180');
+    } else {
+      setStartLngError('');
+    }
+  }
 
   function handleManualLatChange(e) {
     const value = e.target.value;
@@ -322,15 +348,46 @@ export default function App() {
 
     const destCoord = [parseFloat(dest.longitude), parseFloat(dest.latitude)];
     setRouteNoFlyZones([]);
-    const hoverCircle = generateHoverCircle(destCoord);
-    const line = {
-      type: 'Feature',
-      geometry: { type: 'LineString', coordinates: hoverCircle }
-    };
-    if (map.getSource('flight')) {
-      map.getSource('flight').setData(line);
+    const hasStart =
+      dest.startLatitude !== undefined && dest.startLongitude !== undefined;
+    const bounds = new mapboxgl.LngLatBounds(destCoord, destCoord);
+    let data;
+    if (hasStart) {
+      const startCoord = [
+        parseFloat(dest.startLongitude),
+        parseFloat(dest.startLatitude)
+      ];
+      const circle = generateHoverCircle(destCoord);
+      data = {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            geometry: {
+              type: 'LineString',
+              coordinates: [startCoord, destCoord]
+            }
+          },
+          {
+            type: 'Feature',
+            geometry: { type: 'LineString', coordinates: circle }
+          }
+        ]
+      };
+      bounds.extend(startCoord);
+      circle.forEach(c => bounds.extend(c));
     } else {
-      map.addSource('flight', { type: 'geojson', data: line });
+      const hoverCircle = generateHoverCircle(destCoord);
+      data = {
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: hoverCircle }
+      };
+      hoverCircle.forEach(c => bounds.extend(c));
+    }
+    if (map.getSource('flight')) {
+      map.getSource('flight').setData(data);
+    } else {
+      map.addSource('flight', { type: 'geojson', data });
       map.addLayer({
         id: 'flight',
         type: 'line',
@@ -342,8 +399,6 @@ export default function App() {
         }
       });
     }
-    const bounds = new mapboxgl.LngLatBounds(destCoord, destCoord);
-    hoverCircle.forEach(c => bounds.extend(c));
     map.fitBounds(bounds, {
       padding: { left: 300, right: 40, top: 40, bottom: 40 },
       pitch: mapMode === '2d' ? 0 : 60
@@ -806,11 +861,13 @@ export default function App() {
     noFlyHandlersRef.current = {};
   }
 
-  function setManualDestination(lat, lng) {
+  function setManualRoute(startLat, startLng, destLat, destLng) {
     const dest = {
       mission_name: 'Manual',
-      latitude: lat,
-      longitude: lng,
+      startLatitude: startLat,
+      startLongitude: startLng,
+      latitude: destLat,
+      longitude: destLng,
       zone: 'Manual',
       createdDateTime: new Date().toISOString(),
       status: '',
@@ -921,44 +978,74 @@ export default function App() {
             </div>
           <div className="manual-entry">
               <label>
-                Latitude
+                Start Latitude
                 <input
                   type="number"
-                  placeholder="Latitude"
+                  placeholder="Start Latitude"
+                  value={manualStartLat}
+                  onChange={handleManualStartLatChange}
+                />
+                {startLatError && <span className="error">{startLatError}</span>}
+              </label>
+              <label>
+                Start Longitude
+                <input
+                  type="number"
+                  placeholder="Start Longitude"
+                  value={manualStartLng}
+                  onChange={handleManualStartLngChange}
+                />
+                {startLngError && <span className="error">{startLngError}</span>}
+              </label>
+              <label>
+                Destination Latitude
+                <input
+                  type="number"
+                  placeholder="Destination Latitude"
                   value={manualLat}
                   onChange={handleManualLatChange}
                 />
                 {latError && <span className="error">{latError}</span>}
               </label>
               <label>
-                Longitude
+                Destination Longitude
                 <input
                   type="number"
-                  placeholder="Longitude"
+                  placeholder="Destination Longitude"
                   value={manualLng}
                   onChange={handleManualLngChange}
                 />
                 {lngError && <span className="error">{lngError}</span>}
               </label>
               <p className="manual-description">
-                You can also double click on the map to select lat & long.
+                You can also double click on the map to select destination lat & long.
               </p>
               <button
                 onClick={() => {
-                  const lat = parseFloat(manualLat);
-                  const lng = parseFloat(manualLng);
+                  const sLat = parseFloat(manualStartLat);
+                  const sLng = parseFloat(manualStartLng);
+                  const dLat = parseFloat(manualLat);
+                  const dLng = parseFloat(manualLng);
                   if (
-                    !isNaN(lat) &&
-                    !isNaN(lng) &&
+                    !isNaN(sLat) &&
+                    !isNaN(sLng) &&
+                    !isNaN(dLat) &&
+                    !isNaN(dLng) &&
+                    !startLatError &&
+                    !startLngError &&
                     !latError &&
                     !lngError
                   ) {
-                    setManualDestination(lat, lng);
+                    setManualRoute(sLat, sLng, dLat, dLng);
                   }
                 }}
                 disabled={
+                  !!startLatError ||
+                  !!startLngError ||
                   !!latError ||
                   !!lngError ||
+                  manualStartLat === '' ||
+                  manualStartLng === '' ||
                   manualLat === '' ||
                   manualLng === ''
                 }
