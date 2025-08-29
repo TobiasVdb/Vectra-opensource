@@ -375,6 +375,22 @@ body,html,#root {
   cursor: not-allowed;
 }
 
+.coord-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coord-group.highlight input {
+  border-color: #f7931e;
+}
+
+.remove-btn {
+  align-self: flex-start;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
 .dialog h3 {
   margin-top: 0;
   color: #f7931e;
