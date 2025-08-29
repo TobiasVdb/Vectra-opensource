@@ -829,9 +829,11 @@ export default function App() {
         {kpData && (
           <button
             className={`kp-pill glass-effect${kpData.kp > 5 ? ' high' : ''}`}
-            onClick={() => setShowKp(true)}
+            disabled
+            aria-label="Geomagnetic activity (Pro feature)"
           >
             kp {kpData.kp.toFixed(2)}
+            <span className="pro-tag">Pro</span>
           </button>
         )}
         <button className="btn-3d glass-effect" onClick={cycleMapMode}>
@@ -844,11 +846,12 @@ export default function App() {
           <Globe size={18} />
         </button>
         <button
-          onClick={() => setShowWeather(w => !w)}
-          className={`glass-effect${showWeather ? ' active' : ''}`}
-          aria-label="Toggle weather"
+          className="glass-effect"
+          aria-label="Weather (Pro feature)"
+          disabled
         >
           <Cloud size={18} />
+          <span className="pro-tag">Pro</span>
         </button>
         <button className="glass-effect" onClick={openLayers} aria-label="Layers">
           <Stack size={18} />
