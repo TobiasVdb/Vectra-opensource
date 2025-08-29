@@ -1,0 +1,721 @@
+[
+  {
+    "name": "Mobile V2",
+    "description": "",
+    "lat": 51.1482066,
+    "lng": 3.2405869,
+    "location": "Mobile V2",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000020",
+    "docking_name": "Mobile V2 Docking"
+  },
+  {
+    "name": "Eeklo",
+    "description": "",
+    "lat": 51.185795,
+    "lng": 3.555565,
+    "location": "Eeklo",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000004",
+    "docking_name": "Eeklo Docking"
+  },
+  {
+    "name": "Lokeren",
+    "description": "",
+    "lat": 51.1047935,
+    "lng": 3.9914813,
+    "location": "Lokeren",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000010",
+    "docking_name": "Lokeren Docking"
+  },
+  {
+    "name": "Oostende",
+    "description": "",
+    "lat": 51.2264916,
+    "lng": 2.9431194,
+    "location": "Oostende",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000012",
+    "docking_name": "Oostende Docking"
+  },
+  {
+    "name": "Oudenaarde",
+    "description": "",
+    "lat": 50.83898,
+    "lng": 3.59298,
+    "location": "Oudenaarde",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000022",
+    "docking_name": "Oudenaarde Docking"
+  },
+  {
+    "name": "Tournai",
+    "description": "",
+    "lat": 50.61692,
+    "lng": 3.375653,
+    "location": "Tournai",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000035",
+    "docking_name": "Tournai Docking"
+  },
+  {
+    "name": "Zedelgem",
+    "description": " ",
+    "lat": 51.14104,
+    "lng": 3.11478,
+    "flight_authorization": {},
+    "fire_department": {
+      "phone_number": "050/68.19.65",
+      "mail": [
+        "Johan.declercq@zone1.be",
+        "Jeroen.bonte@zone1.be",
+        "operaties.brugge@zone1.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000001",
+    "docking_name": "Zedelgem Docking"
+  },
+  {
+    "name": "Menen",
+    "description": "On the roof of the fire department service of zone Menen, located at Krommebeekstraat 34d, 8930 Menen.",
+    "lat": 50.813389,
+    "lng": 3.124722,
+    "location": "Menen",
+    "flight_authorization": [
+      {
+        "authorization_zone": "Kortrijk - Wevelgem RMZ2",
+        "info": "Civil airport",
+        "rules": "Activate sector\nDossiernumber SA2024.0663\nFill in DAA Planner\nActivate DAA Fly",
+        "primary_nr": "056 36 20 44",
+        "secondary_nr": "056 36 20 42"
+      },
+      {
+        "authorization_zone": "Kortrijk - Wevelgem RMZ1",
+        "info": "Public airport",
+        "rules": "DO NOT FLY IN ZONE",
+        "primary_nr": "/",
+        "secondary_nr": "/",
+        "activate": "Menen Sector L"
+      },
+      {
+        "authorization_zone": "EBMO Moorsele",
+        "info": "Civil airport",
+        "rules": "- Contact -> if no contact = NO FLIGHT\n- If contact = can we fly?\n- Only 9h-21h LT(or till SS)\n- NO NIGHT FLIGHT\n- Contact after flight",
+        "primary_nr": "0496/23 56 33 (Jan: Overste)",
+        "secondary_nr": "0479/80 70 81 (Dirk: exploitant)",
+        "activate": "Menen Sector L"
+      }
+    ],
+    "fire_department": {
+      "phone_number": "056/22 44 44",
+      "mail": [
+        "meldkamer@hvzfluvia.be",
+        "philip.stichelbaut@hvzfluvia.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000017",
+    "docking_name": "Menen Docking"
+  },
+  {
+    "name": "Waregem",
+    "description": "On the roof of the fire department service of zone Waregem, located at Gentseweg 571, 8793 Waregem.",
+    "lat": 50.899558,
+    "lng": 3.398219,
+    "location": "Waregem",
+    "flight_authorization": {},
+    "fire_department": {
+      "phone_number": "056/22 44 44",
+      "mail": [
+        "meldkamer@hvzfluvia.be",
+        "philip.stichelbaut@hvzfluvia.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000018",
+    "docking_name": "Waregem Docking"
+  },
+  {
+    "name": "Battice",
+    "description": " ",
+    "lat": 50.649673,
+    "lng": 5.811818,
+    "flight_authorization": {},
+    "fire_department": {
+      "phone_number": "087/47.97.30",
+      "mail": [
+        "dispatching@zone-vhp.be",
+        "quentin.gregoire@zone-vhp.be",
+        "yannick.gohy@zone-vhp.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000026",
+    "docking_name": "Battice Docking"
+  },
+  {
+    "name": "Tessenderlo",
+    "description": " ",
+    "lat": 51.069833,
+    "lng": 5.129583,
+    "flight_authorization": {},
+    "fire_department": {
+      "phone_number": "011/24 88 10",
+      "mail": [
+        "dispatching@zuidwestlimburg.be",
+        "operaties@zuidwestlimburg.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000025",
+    "docking_name": "Tessenderlo Docking"
+  },
+  {
+    "name": "Frameries",
+    "description": "",
+    "lat": 50.416317,
+    "lng": 3.901625,
+    "location": "Frameries",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000039",
+    "docking_name": "Frameries Docking"
+  },
+  {
+    "name": "Floreffe",
+    "description": "",
+    "lat": 50.4285355,
+    "lng": 4.7607359,
+    "location": "Floreffe",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000041",
+    "docking_name": "Floreffe Docking"
+  },
+  {
+    "name": "Chimay",
+    "description": "",
+    "lat": 50.055115,
+    "lng": 4.306781,
+    "location": "Chimay",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000040",
+    "docking_name": "Chimay Docking"
+  },
+  {
+    "name": "Marche-en-Famenne",
+    "description": " ",
+    "lat": 50.220667,
+    "lng": 5.330972,
+    "flight_authorization": {},
+    "fire_department": {
+      "phone_number": "063/42.27.55",
+      "mail": [
+        "e.fontaine@zslux.be",
+        "d.martin@zslux.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000023",
+    "docking_name": "Marche-en-Famenne Docking"
+  },
+  {
+    "name": "Ingelmunster",
+    "description": " ",
+    "lat": 50.920925,
+    "lng": 3.257205,
+    "flight_authorization": {},
+    "fire_department": {
+      "phone_number": "051 80 60 01",
+      "mail": [
+        "operaties@zonemidwest.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000030",
+    "docking_name": "Ingelmunster Docking"
+  },
+  {
+    "name": "Hasselt",
+    "description": " ",
+    "lat": 50.926028,
+    "lng": 5.318222,
+    "flight_authorization": [
+      {
+        "authorization_zone": "EBZH Kiewit",
+        "info": "Civil airport",
+        "rules": "Call before enter the zone.\nNo answer --> No acces",
+        "primary_nr": "0479913683 (Luc Desair)",
+        "secondary_nr": "/"
+      }
+    ],
+    "fire_department": {
+      "phone_number": "011/24 88 10",
+      "mail": [
+        "dispatching@zuidwestlimburg.be",
+        "operaties@zuidwestlimburg.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000024",
+    "docking_name": "Hasselt Docking"
+  },
+  {
+    "name": "Ninove",
+    "description": "On the ground near the care home Klateringen, located at Centrumlaan 173, 9400 Ninove.",
+    "lat": 50.833389,
+    "lng": 4.014306,
+    "location": "Ninove",
+    "flight_authorization": {},
+    "fire_department": {
+      "phone_number": "",
+      "mail": [
+        "noodplanning@ninove.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000007",
+    "docking_name": "Ninove Docking"
+  },
+  {
+    "name": "Ranst Campus Vesta",
+    "description": "Brandweerzone Rand Post Ranst, Sintelweg 27, 2520 Ranst.",
+    "lat": 51.185219,
+    "lng": 4.590722,
+    "location": "Ranst",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000013",
+    "docking_name": "Vesta Docking"
+  },
+  {
+    "name": "Mobile V1",
+    "description": "",
+    "lat": 50.8452,
+    "lng": 4.364993,
+    "location": "Mobile V1",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000009",
+    "docking_name": "Mobile V1 Docking"
+  },
+  {
+    "name": "Affligem",
+    "description": "",
+    "lat": 50.906751,
+    "lng": 4.1087965,
+    "location": "Affligem",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000034",
+    "docking_name": "Affligem Docking"
+  },
+  {
+    "name": "Halle",
+    "description": "",
+    "lat": 50.751423,
+    "lng": 4.255879,
+    "location": "Halle",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000036",
+    "docking_name": "Halle Docking"
+  },
+  {
+    "name": "Aywaille",
+    "description": "",
+    "lat": 50.490894,
+    "lng": 5.714748,
+    "location": "Aywaille",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000037",
+    "docking_name": "Aywaille Docking"
+  },
+  {
+    "name": "Tongeren",
+    "description": " ",
+    "lat": 50.7841,
+    "lng": 5.463562,
+    "flight_authorization": {},
+    "fire_department": {
+      "phone_number": "011/24 88 10",
+      "mail": [
+        "dispatching@zuidwestlimburg.be",
+        "operaties@zuidwestlimburg.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000033",
+    "docking_name": "Tongeren Docking"
+  },
+  {
+    "name": "Zeebrugge",
+    "description": "On the ground near the Port Authority Building of the Harbour of Zeebrugge, located at Isabellalaan 1, 8380 Brugge",
+    "lat": 51.333056,
+    "lng": 3.219167,
+    "location": "Zeebrugge",
+    "flight_authorization": [
+      {
+        "authorization_zone": "Harbour Zeebruges",
+        "info": "Harbour",
+        "rules": "- Activate flight in POAB\n- Deactivate POAB flight",
+        "primary_nr": "050 54 68 67",
+        "secondary_nr": "/"
+      }
+    ],
+    "fire_department": {
+      "phone_number": "050/68.19.65",
+      "mail": [
+        "Johan.declercq@zone1.be",
+        "Jeroen.bonte@zone1.be",
+        "operaties.brugge@zone1.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000002",
+    "docking_name": "Zeebrugge Docking"
+  },
+  {
+    "name": "Lommel",
+    "description": "Norbert Neeckxlaan 52, 3920 Lommel",
+    "lat": 51.225791,
+    "lng": 5.324712,
+    "location": "Lommel",
+    "flight_authorization": {},
+    "fire_department": {
+      "phone_number": "011/55.91.40",
+      "mail": [
+        "bjorn.bosmans@hvznl.be",
+        "peter.vangrieken@hvznl.be",
+        "koen.vreys@hvznl.be",
+        "bart.kuyken@hvznl.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000021",
+    "docking_name": "Lommel Docking"
+  },
+  {
+    "name": "Sint-Truiden Droneport",
+    "description": "Lichtenberglaan 1090, 3800 Sint-Truiden",
+    "lat": 50.795399,
+    "lng": 5.206454,
+    "location": "Sint-Truiden",
+    "flight_authorization": {},
+    "fire_department": {
+      "phone_number": "011/24 88 10",
+      "mail": [
+        "dispatching@zuidwestlimburg.be",
+        "operaties@zuidwestlimburg.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000019",
+    "docking_name": "Sint-Truiden Docking"
+  },
+  {
+    "name": "Eupen",
+    "description": "On the roof of the fire department service of zone Eupen, located at Kehrweg 9c, 4700 Eupen.",
+    "lat": 50.6255556,
+    "lng": 6.043611111111111,
+    "location": "Eupen",
+    "flight_authorization": {},
+    "fire_department": {
+      "phone_number": "087/260.697",
+      "mail": [
+        "marc.vondenhof@hlzdg.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000015",
+    "docking_name": "Eupen Docking"
+  },
+  {
+    "name": "Wavre",
+    "description": " ",
+    "lat": 50.69589,
+    "lng": 4.61475,
+    "flight_authorization": {},
+    "fire_department": {
+      "phone_number": "010/39.55.10",
+      "mail": [
+        "bertrand.lorent@incendiebw.be",
+        "yves.storder@incendiebw.be",
+        "fabian.benoit@incendiebw.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000006",
+    "docking_name": "Wavre Docking"
+  },
+  {
+    "name": "Arlon",
+    "description": " ",
+    "lat": 49.690792,
+    "lng": 5.81914,
+    "flight_authorization": [
+      {
+        "authorization_zone": "",
+        "info": "",
+        "rules": "",
+        "primary_nr": "",
+        "secondary_nr": ""
+      }
+    ],
+    "fire_department": {
+      "phone_number": "063/42.27.55",
+      "mail": [
+        "e.fontaine@zslux.be",
+        "d.martin@zslux.be"
+      ]
+    },
+    "police": {
+      "phone_number": "",
+      "mail": [
+        "",
+        ""
+      ]
+    },
+    "docking_id": "00000000-0000-0000-0000-000000000028",
+    "docking_name": "Arlon Docking"
+  },
+  {
+    "name": "Kuurne",
+    "description": "On the roof of the fire department service of zone Kuurne, located at Weggevoerdenplein 8, 8520 Kuurne",
+    "lat": 50.849361,
+    "lng": 3.286639,
+    "location": "Kuurne",
+    "flight_authorization": [
+      {
+        "authorization_zone": "Kortrijk - Wevelgem RMZ2",
+        "info": "Civil airport",
+        "rules": "Activate sector\nDossiernumber SA2024.0663\nFill in DAA Planner\nActivate DAA Fly",
+        "primary_nr": "056 36 20 44",
+        "secondary_nr": "056 36 20 42"
+      }
+    ],
+    "fire_department": {
+      "phone_number": "056/22 44 44",
+      "mail": [
+        "meldkamer@hvzfluvia.be",
+        "philip.stichelbaut@hvzfluvia.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000016",
+    "docking_name": "Kuurne Docking"
+  },
+  {
+    "name": "Brussel-Hectoliterstraat",
+    "description": "",
+    "lat": 50.83654,
+    "lng": 4.34425,
+    "location": "Brussel-Hectoliterstraat",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000032",
+    "docking_name": "Brussel-Hectoliterstraat Docking"
+  },
+  {
+    "name": "Ingelmunster",
+    "description": " ",
+    "lat": 50.920925,
+    "lng": 3.257205,
+    "flight_authorization": {},
+    "fire_department": {
+      "phone_number": "051 80 60 01",
+      "mail": [
+        "operaties@zonemidwest.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000029",
+    "docking_name": "Roeselare Docking"
+  },
+  {
+    "name": "Ieper",
+    "description": " ",
+    "lat": 50.868892,
+    "lng": 2.89053,
+    "flight_authorization": [
+      {
+        "authorization_zone": "EBYP Jan Yperman Ieper",
+        "info": "Helipad hospital",
+        "rules": "Docking is inside Geo zone\nAsk permission before Take off.\nNo answer --> No Take off",
+        "primary_nr": "057/35 60 20",
+        "secondary_nr": "057/35 60 10"
+      }
+    ],
+    "fire_department": {
+      "phone_number": "058/60.39.36",
+      "mail": [
+        "bruno.denys@brandweerwesthoek.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000027",
+    "docking_name": "Ieper Docking"
+  },
+  {
+    "name": "Asse Pivo",
+    "description": "On the ground near the Pivo, Provinciaal Instituut voor Vorming en Opleiding, Poverstraat 75, 1731 Asse.",
+    "lat": 50.81375,
+    "lng": 4.125389,
+    "location": "Asse",
+    "flight_authorization": [
+      {
+        "authorization_zone": "Brussels VLL2",
+        "info": "Public airport",
+        "rules": "DO NOT FLY IN ZONE",
+        "primary_nr": "",
+        "secondary_nr": ""
+      },
+      {
+        "authorization_zone": "Belgian National Bank Dispatch",
+        "info": "Geozone BNB",
+        "rules": "State Flight -> - Call dispatch BNB and inform take-off- After flight inform landing alsoCommercial flight ->- DAA planner and fly- Email 7 days before to ccz.vt@nbb.be",
+        "primary_nr": "02/221.45.15",
+        "secondary_nr": ""
+      }
+    ],
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000014",
+    "docking_name": "Asse Docking"
+  },
+  {
+    "name": "Brasschaat",
+    "description": "On the roof of the fire department service of zone Rand, located at De Mortel 32, 2930 Brasschaat",
+    "lat": 51.296361,
+    "lng": 4.49475,
+    "location": "Brasschaat",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {
+      "phone_number": "Check Mission Details Sense",
+      "mail": [
+        "Werner.Hoogsteyns@police.belgium.eu"
+      ]
+    },
+    "docking_id": "00000000-0000-0000-0000-000000000011",
+    "docking_name": "Brasschaat Docking"
+  },
+  {
+    "name": "Braine-lAlleud",
+    "description": " ",
+    "lat": 50.68581,
+    "lng": 4.395856,
+    "flight_authorization": {},
+    "fire_department": {
+      "phone_number": "010/39.55.10",
+      "mail": [
+        "bertrand.lorent@incendiebw.be",
+        "yves.storder@incendiebw.be",
+        "fabian.benoit@incendiebw.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000031",
+    "docking_name": "Brain l'Alleud Docking"
+  },
+  {
+    "name": "Zeebrugge",
+    "description": "On the ground near the Port Authority Building of the Harbour of Zeebrugge, located at Isabellalaan 1, 8380 Brugge",
+    "lat": 51.333056,
+    "lng": 3.219167,
+    "location": "Zeebrugge",
+    "flight_authorization": [
+      {
+        "authorization_zone": "Harbour Zeebruges",
+        "info": "Harbour",
+        "rules": "- Activate flight in POAB\n- Deactivate POAB flight",
+        "primary_nr": "050 54 68 67",
+        "secondary_nr": "/"
+      }
+    ],
+    "fire_department": {
+      "phone_number": "050/68.19.65",
+      "mail": [
+        "Johan.declercq@zone1.be",
+        "Jeroen.bonte@zone1.be",
+        "operaties.brugge@zone1.be"
+      ]
+    },
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000003",
+    "docking_name": "Brugge Docking"
+  },
+  {
+    "name": "Malmedy",
+    "description": "",
+    "lat": 50.42461,
+    "lng": 6.034245,
+    "location": "Malmedy",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000038",
+    "docking_name": "Malmedy Docking"
+  },
+  {
+    "name": "Barcelona",
+    "description": "Fake basestation for Barcelona missions",
+    "lat": 41.4211,
+    "lng": 2.1734,
+    "location": "Barcelona",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000100",
+    "docking_name": "Barcelona Docking"
+  },
+  {
+    "name": "Madrid",
+    "description": "Fake basestation for Madrid missions",
+    "lat": 40.4528,
+    "lng": -3.7038,
+    "location": "Madrid",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000101",
+    "docking_name": "Madrid Docking"
+  },
+  {
+    "name": "Seville",
+    "description": "Fake basestation for Seville missions",
+    "lat": 37.4251,
+    "lng": -5.9845,
+    "location": "Seville",
+    "flight_authorization": {},
+    "fire_department": {},
+    "police": {},
+    "docking_id": "00000000-0000-0000-0000-000000000102",
+    "docking_name": "Seville Docking"
+  }
+]
