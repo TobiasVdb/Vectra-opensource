@@ -105,6 +105,8 @@ export default function App() {
   const noFlyHandlersRef = useRef({});
   const nfzPopupRef = useRef(null);
   const layerFeaturesRef = useRef({});
+  const startMarkerRef = useRef(null);
+  const destMarkerRef = useRef(null);
   const [selected, setSelected] = useState(null);
   const [showDialog, setShowDialog] = useState(true);
   const [manualStartLat, setManualStartLat] = useState('');
@@ -158,6 +160,16 @@ export default function App() {
     } else {
       setLngError('');
     }
+  }
+
+  function clearStart() {
+    setManualStartLat('');
+    setManualStartLng('');
+  }
+
+  function clearDestination() {
+    setManualLat('');
+    setManualLng('');
   }
 
   const [kpData, setKpData] = useState(null);
@@ -236,13 +248,85 @@ export default function App() {
     const map = mapRef.current;
     const handler = e => {
       const { lng, lat } = e.lngLat;
-      setManualLat(lat.toFixed(5));
-      setManualLng(lng.toFixed(5));
+      if (!manualStartLat || !manualStartLng) {
+        setManualStartLat(lat.toFixed(5));
+        setManualStartLng(lng.toFixed(5));
+      } else {
+        setManualLat(lat.toFixed(5));
+        setManualLng(lng.toFixed(5));
+      }
     };
     map.on('dblclick', handler);
     map.doubleClickZoom.disable();
     return () => map.off('dblclick', handler);
-  }, []);
+  }, [manualStartLat, manualStartLng]);
+
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+    const map = mapRef.current;
+    const startSet = manualStartLat !== '' && manualStartLng !== '';
+    const destSet = manualLat !== '' && manualLng !== '';
+
+    if (startSet) {
+      const coord = [parseFloat(manualStartLng), parseFloat(manualStartLat)];
+      if (startMarkerRef.current) {
+        startMarkerRef.current.setLngLat(coord);
+      } else {
+        startMarkerRef.current = new mapboxgl.Marker({ color: '#4caf50' })
+          .setLngLat(coord)
+          .addTo(map);
+      }
+    } else if (startMarkerRef.current) {
+      startMarkerRef.current.remove();
+      startMarkerRef.current = null;
+    }
+
+    if (destSet) {
+      const coord = [parseFloat(manualLng), parseFloat(manualLat)];
+      if (destMarkerRef.current) {
+        destMarkerRef.current.setLngLat(coord);
+      } else {
+        destMarkerRef.current = new mapboxgl.Marker({ color: '#e65100' })
+          .setLngLat(coord)
+          .addTo(map);
+      }
+    } else if (destMarkerRef.current) {
+      destMarkerRef.current.remove();
+      destMarkerRef.current = null;
+    }
+
+    if (startSet && destSet) {
+      const line = {
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: [
+            [parseFloat(manualStartLng), parseFloat(manualStartLat)],
+            [parseFloat(manualLng), parseFloat(manualLat)]
+          ]
+        }
+      };
+      if (map.getSource('manual-line')) {
+        map.getSource('manual-line').setData(line);
+      } else {
+        map.addSource('manual-line', { type: 'geojson', data: line });
+        map.addLayer({
+          id: 'manual-line',
+          type: 'line',
+          source: 'manual-line',
+          layout: {},
+          paint: {
+            'line-color': '#f7931e',
+            'line-width': 2,
+            'line-dasharray': [2, 2]
+          }
+        });
+      }
+    } else {
+      if (map.getLayer('manual-line')) map.removeLayer('manual-line');
+      if (map.getSource('manual-line')) map.removeSource('manual-line');
+    }
+  }, [manualStartLat, manualStartLng, manualLat, manualLng, mapLoaded]);
 
   // preload auto-detection sound
   // load kp data
@@ -876,6 +960,8 @@ export default function App() {
     focusDestination(dest);
   }
 
+  const nextTarget = !manualStartLat || !manualStartLng ? 'start' : 'dest';
+
   return (
     <>
       <div ref={mapContainer} className="map-container" />
@@ -977,6 +1063,7 @@ export default function App() {
               <h3>Flights</h3>
             </div>
           <div className="manual-entry">
+            <div className={`coord-group${nextTarget === 'start' ? ' highlight' : ''}`}>
               <label>
                 Start Latitude
                 <input
@@ -997,6 +1084,16 @@ export default function App() {
                 />
                 {startLngError && <span className="error">{startLngError}</span>}
               </label>
+              {manualStartLat && manualStartLng && (
+                <button className="remove-btn" onClick={clearStart}>Remove Start</button>
+              )}
+              {nextTarget === 'start' && (
+                <p className="manual-description">
+                  Double click on the map to select start lat & long.
+                </p>
+              )}
+            </div>
+            <div className={`coord-group${nextTarget === 'dest' ? ' highlight' : ''}`}>
               <label>
                 Destination Latitude
                 <input
@@ -1017,42 +1114,50 @@ export default function App() {
                 />
                 {lngError && <span className="error">{lngError}</span>}
               </label>
-              <p className="manual-description">
-                You can also double click on the map to select destination lat & long.
-              </p>
-              <button
-                onClick={() => {
-                  const sLat = parseFloat(manualStartLat);
-                  const sLng = parseFloat(manualStartLng);
-                  const dLat = parseFloat(manualLat);
-                  const dLng = parseFloat(manualLng);
-                  if (
-                    !isNaN(sLat) &&
-                    !isNaN(sLng) &&
-                    !isNaN(dLat) &&
-                    !isNaN(dLng) &&
-                    !startLatError &&
-                    !startLngError &&
-                    !latError &&
-                    !lngError
-                  ) {
-                    setManualRoute(sLat, sLng, dLat, dLng);
-                  }
-                }}
-                disabled={
-                  !!startLatError ||
-                  !!startLngError ||
-                  !!latError ||
-                  !!lngError ||
-                  manualStartLat === '' ||
-                  manualStartLng === '' ||
-                  manualLat === '' ||
-                  manualLng === ''
-                }
-              >
-                Go
-              </button>
+              {manualLat && manualLng && (
+                <button className="remove-btn" onClick={clearDestination}>
+                  Remove Destination
+                </button>
+              )}
+              {nextTarget === 'dest' && (
+                <p className="manual-description">
+                  Double click on the map to select destination lat & long.
+                </p>
+              )}
             </div>
+            <button
+              onClick={() => {
+                const sLat = parseFloat(manualStartLat);
+                const sLng = parseFloat(manualStartLng);
+                const dLat = parseFloat(manualLat);
+                const dLng = parseFloat(manualLng);
+                if (
+                  !isNaN(sLat) &&
+                  !isNaN(sLng) &&
+                  !isNaN(dLat) &&
+                  !isNaN(dLng) &&
+                  !startLatError &&
+                  !startLngError &&
+                  !latError &&
+                  !lngError
+                ) {
+                  setManualRoute(sLat, sLng, dLat, dLng);
+                }
+              }}
+              disabled={
+                !!startLatError ||
+                !!startLngError ||
+                !!latError ||
+                !!lngError ||
+                manualStartLat === '' ||
+                manualStartLng === '' ||
+                manualLat === '' ||
+                manualLng === ''
+              }
+            >
+              Go
+            </button>
+          </div>
         </div>
       )}
     </>
