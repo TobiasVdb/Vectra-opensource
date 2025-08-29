@@ -11,6 +11,8 @@ import {
 } from '@phosphor-icons/react';
 import AuthDialog from './AuthDialog';
 import { isZoneActive } from './fetchActiveGeozones.js';
+import { lineString, lineIntersect, bbox, length } from '@turf/turf';
+import { estimateActualDistance } from './utils.js';
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoic25pbGxvY21vdCIsImEiOiJjbThxY2U2MmIwYWE2MmtzOHhyNjdqMjZnIn0.3b-7Y5j4Uxy5kNCqcLaaYw';
 
@@ -97,6 +99,44 @@ function generateHoverCircle(center, radiusMeters = 50, points = 60) {
   }
   return coords;
 
+}
+
+function calculateAvoidingPath(start, dest, zones = []) {
+  let path = [start, dest];
+  const intersected = [];
+  zones.forEach(z => {
+    const geom = z.geometry;
+    if (!geom) return;
+    const poly =
+      geom.type === 'Polygon'
+        ? geom
+        : geom.type === 'MultiPolygon'
+          ? { type: 'Polygon', coordinates: geom.coordinates[0] }
+          : null;
+    if (!poly) return;
+    const line = lineString(path);
+    if (lineIntersect(line, poly).features.length > 0) {
+      intersected.push(z);
+      const box = bbox(poly); // [minX, minY, maxX, maxY]
+      const offset = 0.01;
+      const above = [
+        start,
+        [start[0], box[3] + offset],
+        [dest[0], box[3] + offset],
+        dest
+      ];
+      const below = [
+        start,
+        [start[0], box[1] - offset],
+        [dest[0], box[1] - offset],
+        dest
+      ];
+      const aboveLen = length(lineString(above));
+      const belowLen = length(lineString(below));
+      path = aboveLen < belowLen ? above : below;
+    }
+  });
+  return { path, intersected };
 }
 
 export default function App() {
@@ -186,6 +226,7 @@ export default function App() {
   const initialLayerIdsRef = useRef([]);
   const [layerFeatures, setLayerFeatures] = useState([]);
   const [routeNoFlyZones, setRouteNoFlyZones] = useState([]);
+  const [flightPath, setFlightPath] = useState([]);
   const [clearedZoneIds, setClearedZoneIds] = useState([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showWeather, setShowWeather] = useState(false);
@@ -443,15 +484,19 @@ export default function App() {
         parseFloat(dest.startLatitude)
       ];
       const circle = generateHoverCircle(destCoord);
+      const { path, intersected } = calculateAvoidingPath(
+        startCoord,
+        destCoord,
+        layerFeatures
+      );
+      setRouteNoFlyZones(intersected);
+      setFlightPath(path);
       data = {
         type: 'FeatureCollection',
         features: [
           {
             type: 'Feature',
-            geometry: {
-              type: 'LineString',
-              coordinates: [startCoord, destCoord]
-            }
+            geometry: { type: 'LineString', coordinates: path }
           },
           {
             type: 'Feature',
@@ -460,6 +505,7 @@ export default function App() {
         ]
       };
       bounds.extend(startCoord);
+      path.forEach(c => bounds.extend(c));
       circle.forEach(c => bounds.extend(c));
     } else {
       const hoverCircle = generateHoverCircle(destCoord);
@@ -467,6 +513,7 @@ export default function App() {
         type: 'Feature',
         geometry: { type: 'LineString', coordinates: hoverCircle }
       };
+      setFlightPath([]);
       hoverCircle.forEach(c => bounds.extend(c));
     }
     if (map.getSource('flight')) {
@@ -1010,6 +1057,17 @@ export default function App() {
           </button>
         )}
       </div>
+      {flightPath.length >= 2 && selected && (
+        <div className="info-panel glass-effect">
+          <div className="flight-status ok">Flight path ready</div>
+          <div className="info-group">
+            <div className="info-row">
+              <span>Distance</span>
+              <span>{estimateActualDistance(flightPath).toFixed(2)} km</span>
+            </div>
+          </div>
+        </div>
+      )}
       {showAuth && (
         <AuthDialog
           onAuthenticated={email => {
