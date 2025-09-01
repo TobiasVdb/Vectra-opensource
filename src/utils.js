@@ -1,9 +1,9 @@
 // utils.js
-import { OverpassFetcher } from './overpassfetcher.js';
-import { lonLatToPixelXY, pixelXYToLonLat } from './geo.js';
 import simplify from '@turf/simplify';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import { point as turfPoint, polygon as turfPolygon } from '@turf/helpers';
+import { OverpassFetcher } from './overpassfetcher.js';
+import { lonLatToPixelXY, pixelXYToLonLat } from './geo.js';
 
 let dockingStationAltitudeInMeters = 0;
 let cruiseAltitudeInMeters = 90;
@@ -524,7 +524,7 @@ export function getEstimatedMissionTimeAtWhichDroneShouldReturnInMinutes(distanc
     return calculateTakeoffToCruise() + calculateCruisePhaseToDestination(distance) + calculateTimeOnStation(distance);
 }
 
-function pointInPolygon([lon, lat], geometry) {
+export function pointInPolygon([lon, lat], geometry) {
     if (!geometry) return false;
     const pt = turfPoint([lon, lat]);
 
