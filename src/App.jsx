@@ -1015,45 +1015,82 @@ export default function App() {
     <>
       <div ref={mapContainer} className="map-container" />
       <div className="top-right">
-        <button className="glass-effect" onClick={cycleMapStyle} aria-label="Toggle map style">
+        <button
+          className="glass-effect"
+          onClick={cycleMapStyle}
+          aria-label="Map type"
+          title="Map type"
+        >
           <NextIcon size={18} />
         </button>
         {kpData && (
           <button
             className={`kp-pill glass-effect${kpData.kp > 5 ? ' high' : ''}`}
             disabled
-            aria-label="Geomagnetic activity (Pro feature)"
+            aria-label="Geomagnetic activity (Pro only)"
+            title="Geomagnetic activity (Pro only)"
           >
             kp {kpData.kp.toFixed(2)}
             <span className="pro-tag">Pro</span>
           </button>
         )}
-        <button className="btn-3d glass-effect" onClick={cycleMapMode}>
+        <button
+          className="btn-3d glass-effect"
+          onClick={cycleMapMode}
+          aria-label="Camera mode"
+          title="Camera (2D, 3D or 3E)"
+        >
           {mapMode === '2d' ? '3D' : mapMode === '3d' ? '3E' : '2D'}
         </button>
-        <button className="glass-effect" onClick={rotateMap} aria-label="Rotate map">
+        <button
+          className="glass-effect"
+          onClick={rotateMap}
+          aria-label="Rotate camera"
+          title="Rotate camera"
+        >
           <ArrowClockwise size={18} />
         </button>
-        <button className="glass-effect" onClick={resetView} aria-label="Reset view">
+        <button
+          className="glass-effect"
+          onClick={resetView}
+          aria-label="Flights"
+          title="Flights"
+        >
           <Globe size={18} />
         </button>
         <button
           className="glass-effect"
-          aria-label="Weather (Pro feature)"
+          aria-label="Weather (Pro only)"
+          title="Weather (Pro only)"
           disabled
         >
           <Cloud size={18} />
           <span className="pro-tag">Pro</span>
         </button>
-        <button className="glass-effect" onClick={openLayers} aria-label="Layers">
+        <button
+          className="glass-effect"
+          onClick={openLayers}
+          aria-label="Layers/No Fly Zones"
+          title="Layers/No Fly Zones"
+        >
           <Stack size={18} />
         </button>
         {isLoggedIn ? (
-          <button className="glass-effect" onClick={logout} aria-label="Logout">
+          <button
+            className="glass-effect"
+            onClick={logout}
+            aria-label="Logout"
+            title="Logout"
+          >
             {displayName.charAt(0).toUpperCase()}
           </button>
         ) : (
-          <button className="glass-effect" onClick={() => setShowAuth(true)} aria-label="Login">
+          <button
+            className="glass-effect"
+            onClick={() => setShowAuth(true)}
+            aria-label="Login/Register"
+            title="Login/Register"
+          >
             <UserCircle size={18} />
           </button>
         )}
