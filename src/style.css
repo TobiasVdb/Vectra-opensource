@@ -19,6 +19,11 @@ body,html,#root {
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
 }
 
+body.light .glass-effect {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1.5px solid rgba(0, 0, 0, 0.13);
+}
+
 .top-right {
   position: absolute;
   top: 20px;
@@ -36,6 +41,10 @@ body,html,#root {
   cursor: pointer;
   font-size: 14px;
   position: relative;
+}
+body.light .top-right button,
+body.light .kp-pill {
+  color: #000;
 }
 
 .top-right button:disabled,
