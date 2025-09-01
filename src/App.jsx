@@ -278,6 +278,7 @@ export default function App() {
       }
       setMapLoaded(true);
       applyMapMode(mapMode);
+      mapRef.current.doubleClickZoom.disable();
     });
   }, [mapStyleIndex]);
 
@@ -286,7 +287,7 @@ export default function App() {
   }, [isDark]);
 
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !mapLoaded) return;
     const map = mapRef.current;
     const handler = e => {
       const { lng, lat } = e.lngLat;
@@ -301,7 +302,7 @@ export default function App() {
     map.on('dblclick', handler);
     map.doubleClickZoom.disable();
     return () => map.off('dblclick', handler);
-  }, [manualStartLat, manualStartLng]);
+  }, [manualStartLat, manualStartLng, mapLoaded]);
 
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
