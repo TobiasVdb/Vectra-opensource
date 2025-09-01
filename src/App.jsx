@@ -7,9 +7,11 @@ import {
   ArrowClockwise,
   Stack,
   UserCircle,
-  Cloud
+  Cloud,
+  ChatCenteredText
 } from '@phosphor-icons/react';
 import AuthDialog from './AuthDialog';
+import FeedbackDialog from './FeedbackDialog';
 import { isZoneActive } from './fetchActiveGeozones.js';
 import { lineString, lineIntersect, bbox, length } from '@turf/turf';
 import { estimateActualDistance } from './utils.js';
@@ -230,6 +232,7 @@ export default function App() {
   const [clearedZoneIds, setClearedZoneIds] = useState([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showWeather, setShowWeather] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const currentStyle = MAP_STYLES[mapStyleIndex];
   const isDark = currentStyle.isDark;
@@ -1075,6 +1078,13 @@ export default function App() {
         >
           <Stack size={18} />
         </button>
+        <button
+          className="glass-effect"
+          onClick={() => setShowFeedback(true)}
+          aria-label="Feedback"
+        >
+          <ChatCenteredText size={18} />
+        </button>
         {isLoggedIn ? (
           <button
             className="glass-effect"
@@ -1114,6 +1124,9 @@ export default function App() {
           }}
           onClose={() => setShowAuth(false)}
         />
+      )}
+      {showFeedback && (
+        <FeedbackDialog onClose={() => setShowFeedback(false)} />
       )}
       {showKp && kpData && (
         <div className="kp-modal glass-effect">
