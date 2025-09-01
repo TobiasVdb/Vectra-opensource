@@ -6,6 +6,7 @@ import {
   Sun,
   ArrowClockwise,
   Stack,
+
   UserCircle,
   Cloud,
   ChatCenteredText
@@ -219,9 +220,6 @@ export default function App() {
   // map display mode: '2d', '3d', or '3e' (3D with terrain elevation); default '3e'
   const [mapMode, setMapMode] = useState('3e');
   const [mapStyleIndex, setMapStyleIndex] = useState(0);
-  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('jwt'));
-  const [showAuth, setShowAuth] = useState(false);
-  const [displayName, setDisplayName] = useState(() => localStorage.getItem('email') || '');
   const [layers, setLayers] = useState([]);
   const [showLayers, setShowLayers] = useState(false);
   const [selectedLayerIds, setSelectedLayerIds] = useState([]);
@@ -255,11 +253,11 @@ export default function App() {
   }, [selectedLayerIds]);
 
   useEffect(() => {
-    if (!isLoggedIn || !mapLoaded || initialLayerIdsRef.current.length === 0) return;
+    if (!mapLoaded || initialLayerIdsRef.current.length === 0) return;
     const ids = [...initialLayerIdsRef.current];
     initialLayerIdsRef.current = [];
     ids.forEach(id => toggleLayer(id));
-  }, [isLoggedIn, mapLoaded]);
+  }, [mapLoaded]);
 
   // init map
   useEffect(() => {
@@ -426,24 +424,20 @@ export default function App() {
   }, [showWeather, mapLoaded]);
 
 
-  // load layers when logged in
+  // load layers
   useEffect(() => {
-    if (!isLoggedIn || !mapLoaded) return;
+    if (!mapLoaded) return;
     async function loadLayers() {
       try {
-        const token = localStorage.getItem('jwt');
-        const res = await fetch('https://vectrabackyard-3dmb6.ondigitalocean.app/layers', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await fetch('https://vectrabackyard-3dmb6.ondigitalocean.app/layers');
         const data = await res.json();
         setLayers(data);
-
       } catch (e) {
         console.error('Failed to load layers', e);
       }
     }
     loadLayers();
-  }, [isLoggedIn, mapLoaded]);
+  }, [mapLoaded]);
 
   useEffect(() => {
     if (selected) {
@@ -687,10 +681,6 @@ export default function App() {
   }
 
   function openLayers() {
-    if (!isLoggedIn) {
-      setShowAuth(true);
-      return;
-    }
     clearOverlays();
     setShowLayers(true);
   }
@@ -718,11 +708,8 @@ export default function App() {
       return;
     }
 
-    const token = localStorage.getItem('jwt');
     try {
-      const res = await fetch(`https://vectrabackyard-3dmb6.ondigitalocean.app/layers/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`https://vectrabackyard-3dmb6.ondigitalocean.app/layers/${id}`);
       const layerDetails = await res.json();
       let features;
       try {
@@ -962,41 +949,6 @@ export default function App() {
       console.error('Failed to load layer', e);
     }
   }
-
-  function logout() {
-    localStorage.removeItem('jwt');
-    localStorage.removeItem('email');
-    setIsLoggedIn(false);
-    setDisplayName('');
-    setLayers([]);
-    setShowLayers(false);
-    setSelectedLayerIds([]);
-    setLayerFeatures([]);
-    setRouteNoFlyZones([]);
-    setClearedZoneIds([]);
-    layerFeaturesRef.current = {};
-    if (mapRef.current) {
-      selectedLayerIds.forEach(id => {
-        const fillId = `uas-layer-fill-${id}`;
-        const outlineId = `uas-layer-outline-${id}`;
-        const sourceId = `uas-layer-${id}`;
-        const handlers = noFlyHandlersRef.current[id];
-        if (handlers) {
-          mapRef.current.off('click', fillId, handlers.click);
-          mapRef.current.off('mouseenter', fillId, handlers.mouseenter);
-          mapRef.current.off('mouseleave', fillId, handlers.mouseleave);
-        }
-        if (mapRef.current.getLayer(fillId)) mapRef.current.removeLayer(fillId);
-        if (mapRef.current.getLayer(outlineId)) mapRef.current.removeLayer(outlineId);
-        if (mapRef.current.getSource(sourceId)) mapRef.current.removeSource(sourceId);
-      });
-      if (mapRef.current.getLayer('uas-layer-fill-base')) mapRef.current.removeLayer('uas-layer-fill-base');
-      if (mapRef.current.getLayer('uas-layer-outline-base')) mapRef.current.removeLayer('uas-layer-outline-base');
-      if (mapRef.current.getSource('uas-layer-base')) mapRef.current.removeSource('uas-layer-base');
-    }
-    noFlyHandlersRef.current = {};
-  }
-
   function setManualRoute(startLat, startLng, destLat, destLng) {
     const dest = {
       mission_name: 'Manual',
@@ -1033,7 +985,7 @@ export default function App() {
             aria-label="Geomagnetic activity (Pro only)"
             title="Geomagnetic activity (Pro only)"
           >
-            kp {kpData.kp.toFixed(2)}
+            kp
             <span className="pro-tag">Pro</span>
           </button>
         )}
@@ -1078,6 +1030,7 @@ export default function App() {
         >
           <Stack size={18} />
         </button>
+
         <button
           className="glass-effect"
           onClick={() => setShowFeedback(true)}
