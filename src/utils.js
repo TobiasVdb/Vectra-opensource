@@ -1,6 +1,9 @@
 // utils.js
 import { OverpassFetcher } from './overpassfetcher.js';
 import { lonLatToPixelXY, pixelXYToLonLat } from './geo.js';
+import simplify from '@turf/simplify';
+import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
+import { point as turfPoint, polygon as turfPolygon } from '@turf/helpers';
 
 let dockingStationAltitudeInMeters = 0;
 let cruiseAltitudeInMeters = 90;
@@ -28,7 +31,6 @@ let gustWindSpeedLimitInMetersPerSecond = 20;
 let groundSpeedToDestinationInMetersPerSecond = 13;
 let groundSpeedToHomeInMetersPerSecond = 8.5;
 const overpass = new OverpassFetcher(300); // radius in meters
-import simplify from '@turf/simplify';
 
 export function simplifyFeatureGeometry(feature, toleranceMeters = 100) {
     try {
@@ -521,9 +523,6 @@ export function getEstimatedTimeRequiredBetweenTakeOffAndArrivalAtDestinationInM
 export function getEstimatedMissionTimeAtWhichDroneShouldReturnInMinutes(distance) {
     return calculateTakeoffToCruise() + calculateCruisePhaseToDestination(distance) + calculateTimeOnStation(distance);
 }
-
-import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
-import { point as turfPoint, polygon as turfPolygon } from '@turf/helpers';
 
 function pointInPolygon([lon, lat], geometry) {
     if (!geometry) return false;
