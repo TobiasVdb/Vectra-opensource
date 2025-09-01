@@ -727,3 +727,54 @@ body.light .nfz-popup-nav button {
 .mapboxgl-ctrl-attrib {
   display: none !important;
 }
+
+.feedback-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  color: #fff;
+}
+
+.feedback-form textarea {
+  resize: vertical;
+  min-height: 80px;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+}
+
+.feedback-form input {
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+}
+
+.feedback-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.feedback-actions button {
+  background: #f7931e;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}

@@ -6,12 +6,15 @@ import {
   Sun,
   ArrowClockwise,
   Stack,
+
   UserCircle,
   Cloud,
   SealCheck,
-  SealWarning
+  SealWarning,
+  ChatCenteredText
 } from '@phosphor-icons/react';
 import AuthDialog from './AuthDialog';
+import FeedbackDialog from './FeedbackDialog';
 import { isZoneActive } from './fetchActiveGeozones.js';
 import { lineString, lineIntersect, bbox, length } from '@turf/turf';
 import {
@@ -270,9 +273,6 @@ export default function App() {
   // map display mode: '2d', '3d', or '3e' (3D with terrain elevation); default '3e'
   const [mapMode, setMapMode] = useState('3e');
   const [mapStyleIndex, setMapStyleIndex] = useState(0);
-  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('jwt'));
-  const [showAuth, setShowAuth] = useState(false);
-  const [displayName, setDisplayName] = useState(() => localStorage.getItem('email') || '');
   const [layers, setLayers] = useState([]);
   const [showLayers, setShowLayers] = useState(false);
   const [selectedLayerIds, setSelectedLayerIds] = useState([]);
@@ -283,6 +283,7 @@ export default function App() {
   const [clearedZoneIds, setClearedZoneIds] = useState([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showWeather, setShowWeather] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const currentStyle = MAP_STYLES[mapStyleIndex];
   const isDark = currentStyle.isDark;
@@ -305,11 +306,11 @@ export default function App() {
   }, [selectedLayerIds]);
 
   useEffect(() => {
-    if (!isLoggedIn || !mapLoaded || initialLayerIdsRef.current.length === 0) return;
+    if (!mapLoaded || initialLayerIdsRef.current.length === 0) return;
     const ids = [...initialLayerIdsRef.current];
     initialLayerIdsRef.current = [];
     ids.forEach(id => toggleLayer(id));
-  }, [isLoggedIn, mapLoaded]);
+  }, [mapLoaded]);
 
   // init map
   useEffect(() => {
@@ -476,24 +477,20 @@ export default function App() {
   }, [showWeather, mapLoaded]);
 
 
-  // load layers when logged in
+  // load layers
   useEffect(() => {
-    if (!isLoggedIn || !mapLoaded) return;
+    if (!mapLoaded) return;
     async function loadLayers() {
       try {
-        const token = localStorage.getItem('jwt');
-        const res = await fetch('https://vectrabackyard-3dmb6.ondigitalocean.app/layers', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await fetch('https://vectrabackyard-3dmb6.ondigitalocean.app/layers');
         const data = await res.json();
         setLayers(data);
-
       } catch (e) {
         console.error('Failed to load layers', e);
       }
     }
     loadLayers();
-  }, [isLoggedIn, mapLoaded]);
+  }, [mapLoaded]);
 
   useEffect(() => {
     if (selected) {
@@ -737,10 +734,6 @@ export default function App() {
   }
 
   function openLayers() {
-    if (!isLoggedIn) {
-      setShowAuth(true);
-      return;
-    }
     clearOverlays();
     setShowLayers(true);
   }
@@ -768,11 +761,8 @@ export default function App() {
       return;
     }
 
-    const token = localStorage.getItem('jwt');
     try {
-      const res = await fetch(`https://vectrabackyard-3dmb6.ondigitalocean.app/layers/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(`https://vectrabackyard-3dmb6.ondigitalocean.app/layers/${id}`);
       const layerDetails = await res.json();
       let features;
       try {
@@ -1012,41 +1002,6 @@ export default function App() {
       console.error('Failed to load layer', e);
     }
   }
-
-  function logout() {
-    localStorage.removeItem('jwt');
-    localStorage.removeItem('email');
-    setIsLoggedIn(false);
-    setDisplayName('');
-    setLayers([]);
-    setShowLayers(false);
-    setSelectedLayerIds([]);
-    setLayerFeatures([]);
-    setRouteNoFlyZones([]);
-    setClearedZoneIds([]);
-    layerFeaturesRef.current = {};
-    if (mapRef.current) {
-      selectedLayerIds.forEach(id => {
-        const fillId = `uas-layer-fill-${id}`;
-        const outlineId = `uas-layer-outline-${id}`;
-        const sourceId = `uas-layer-${id}`;
-        const handlers = noFlyHandlersRef.current[id];
-        if (handlers) {
-          mapRef.current.off('click', fillId, handlers.click);
-          mapRef.current.off('mouseenter', fillId, handlers.mouseenter);
-          mapRef.current.off('mouseleave', fillId, handlers.mouseleave);
-        }
-        if (mapRef.current.getLayer(fillId)) mapRef.current.removeLayer(fillId);
-        if (mapRef.current.getLayer(outlineId)) mapRef.current.removeLayer(outlineId);
-        if (mapRef.current.getSource(sourceId)) mapRef.current.removeSource(sourceId);
-      });
-      if (mapRef.current.getLayer('uas-layer-fill-base')) mapRef.current.removeLayer('uas-layer-fill-base');
-      if (mapRef.current.getLayer('uas-layer-outline-base')) mapRef.current.removeLayer('uas-layer-outline-base');
-      if (mapRef.current.getSource('uas-layer-base')) mapRef.current.removeSource('uas-layer-base');
-    }
-    noFlyHandlersRef.current = {};
-  }
-
   function setManualRoute(startLat, startLng, destLat, destLng) {
     const dest = {
       mission_name: 'Manual',
@@ -1068,45 +1023,90 @@ export default function App() {
     <>
       <div ref={mapContainer} className="map-container" />
       <div className="top-right">
-        <button className="glass-effect" onClick={cycleMapStyle} aria-label="Toggle map style">
+        <button
+          className="glass-effect"
+          onClick={cycleMapStyle}
+          aria-label="Map type"
+          title="Map type"
+        >
           <NextIcon size={18} />
         </button>
         {kpData && (
           <button
             className={`kp-pill glass-effect${kpData.kp > 5 ? ' high' : ''}`}
             disabled
-            aria-label="Geomagnetic activity (Pro feature)"
+            aria-label="Geomagnetic activity (Pro only)"
+            title="Geomagnetic activity (Pro only)"
           >
-            kp {kpData.kp.toFixed(2)}
+            kp
             <span className="pro-tag">Pro</span>
           </button>
         )}
-        <button className="btn-3d glass-effect" onClick={cycleMapMode}>
+        <button
+          className="btn-3d glass-effect"
+          onClick={cycleMapMode}
+          aria-label="Camera mode"
+          title="Camera (2D, 3D or 3E)"
+        >
           {mapMode === '2d' ? '3D' : mapMode === '3d' ? '3E' : '2D'}
         </button>
-        <button className="glass-effect" onClick={rotateMap} aria-label="Rotate map">
+        <button
+          className="glass-effect"
+          onClick={rotateMap}
+          aria-label="Rotate camera"
+          title="Rotate camera"
+        >
           <ArrowClockwise size={18} />
         </button>
-        <button className="glass-effect" onClick={resetView} aria-label="Reset view">
+        <button
+          className="glass-effect"
+          onClick={resetView}
+          aria-label="Flights"
+          title="Flights"
+        >
           <Globe size={18} />
         </button>
         <button
           className="glass-effect"
-          aria-label="Weather (Pro feature)"
+          aria-label="Weather (Pro only)"
+          title="Weather (Pro only)"
           disabled
         >
           <Cloud size={18} />
           <span className="pro-tag">Pro</span>
         </button>
-        <button className="glass-effect" onClick={openLayers} aria-label="Layers">
+        <button
+          className="glass-effect"
+          onClick={openLayers}
+          aria-label="Layers/No Fly Zones"
+          title="Layers/No Fly Zones"
+        >
           <Stack size={18} />
         </button>
+
+        <button
+          className="glass-effect"
+          onClick={() => setShowFeedback(true)}
+          aria-label="Feedback"
+        >
+          <ChatCenteredText size={18} />
+        </button>
         {isLoggedIn ? (
-          <button className="glass-effect" onClick={logout} aria-label="Logout">
+          <button
+            className="glass-effect"
+            onClick={logout}
+            aria-label="Logout"
+            title="Logout"
+          >
             {displayName.charAt(0).toUpperCase()}
           </button>
         ) : (
-          <button className="glass-effect" onClick={() => setShowAuth(true)} aria-label="Login">
+          <button
+            className="glass-effect"
+            onClick={() => setShowAuth(true)}
+            aria-label="Login/Register"
+            title="Login/Register"
+          >
             <UserCircle size={18} />
           </button>
         )}
@@ -1288,6 +1288,9 @@ export default function App() {
           }}
           onClose={() => setShowAuth(false)}
         />
+      )}
+      {showFeedback && (
+        <FeedbackDialog onClose={() => setShowFeedback(false)} />
       )}
       {showKp && kpData && (
         <div className="kp-modal glass-effect">
