@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import mapboxgl from 'mapbox-gl';
 import {
   Globe,
@@ -7,12 +7,20 @@ import {
   ArrowClockwise,
   Stack,
   UserCircle,
-  Cloud
+  Cloud,
+  SealCheck,
+  SealWarning
 } from '@phosphor-icons/react';
 import AuthDialog from './AuthDialog';
 import { isZoneActive } from './fetchActiveGeozones.js';
 import { lineString, lineIntersect, bbox, length } from '@turf/turf';
-import { estimateActualDistance } from './utils.js';
+import {
+  estimateActualDistance,
+  getFlightGoNoGo,
+  decimalMinutesToTime,
+  getEstimatedMissionTimeAtWhichDroneShouldReturnInMinutes,
+  getEstimatedCurrentCapacityConsumedAtWhichDroneShouldReturn
+} from './utils.js';
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoic25pbGxvY21vdCIsImEiOiJjbThxY2U2MmIwYWE2MmtzOHhyNjdqMjZnIn0.3b-7Y5j4Uxy5kNCqcLaaYw';
 
@@ -36,6 +44,9 @@ const MAP_STYLES = [
     isDark: false
   }
 ];
+
+
+const PRACTICAL_BATTERY_CAPACITY = 21;
 
 
 function formatZoneValue(val) {
@@ -66,6 +77,16 @@ function formatZoneValue(val) {
     return parts.join('<br/>');
   }
   return JSON.stringify(val);
+}
+
+function formatTimeAgo(dateStr) {
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }
 
 function getZoneId(feature) {
@@ -157,6 +178,38 @@ export default function App() {
   const [startLngError, setStartLngError] = useState('');
   const [latError, setLatError] = useState('');
   const [lngError, setLngError] = useState('');
+
+  const flightInfo = useMemo(() => {
+    if (flightPath.length < 2 || !selected) return null;
+    const startLat = parseFloat(selected.startLatitude);
+    const startLng = parseFloat(selected.startLongitude);
+    const destLat = parseFloat(selected.latitude);
+    const destLng = parseFloat(selected.longitude);
+    if ([startLat, startLng, destLat, destLng].some(n => isNaN(n))) return null;
+    const distance = estimateActualDistance(flightPath);
+    const distanceMeters = distance * 1000;
+    const avgWind = 2.06;
+    const gust = 3.06;
+    const windFrom = 0;
+    const flight = getFlightGoNoGo(
+      distanceMeters,
+      avgWind,
+      gust,
+      windFrom,
+      startLat,
+      startLng,
+      destLat,
+      destLng
+    );
+    const returnCapacity =
+      PRACTICAL_BATTERY_CAPACITY -
+      getEstimatedCurrentCapacityConsumedAtWhichDroneShouldReturn(distanceMeters);
+    const returnTime = decimalMinutesToTime(
+      getEstimatedMissionTimeAtWhichDroneShouldReturnInMinutes(distanceMeters)
+    );
+    const distText = `${distance.toFixed(1)} km`;
+    return { flight, returnCapacity, returnTime, distText, avgWind, gust };
+  }, [flightPath, selected]);
 
   function handleManualStartLatChange(e) {
     const value = e.target.value;
@@ -1058,15 +1111,173 @@ export default function App() {
           </button>
         )}
       </div>
-      {flightPath.length >= 2 && selected && (
+      {flightInfo && (
         <div className="info-panel glass-effect">
-          <div className="flight-status ok">Flight path ready</div>
+          <h3>Flight Info</h3>
+          <div className={`flight-status ${flightInfo.flight.allOk ? 'ok' : 'no'}`}>
+            {flightInfo.flight.allOk ? (
+              <SealCheck size={18} weight="fill" />
+            ) : (
+              <SealWarning size={18} weight="fill" />
+            )}
+            <span>Flight is {flightInfo.flight.allOk ? 'GO' : 'NO GO'}</span>
+          </div>
+
           <div className="info-group">
             <div className="info-row">
-              <span>Distance</span>
-              <span>{estimateActualDistance(flightPath).toFixed(2)} km</span>
+              <span className="label">Mission</span>
+              <span className="value">{selected.mission_name}</span>
+            </div>
+            <div className="info-row">
+              <span className="label">Status</span>
+              <span className="value">{selected.status}</span>
+            </div>
+            <div className="info-row">
+              <span className="label">Zone</span>
+              <span className="value">{selected.zone}</span>
+            </div>
+            <div className="info-row">
+              <span className="label">Customer</span>
+              <span className="value">{selected.customer}</span>
+            </div>
+            <div className="info-row">
+              <span className="label">Created</span>
+              <span className="value">{formatTimeAgo(selected.createdDateTime)}</span>
             </div>
           </div>
+
+          <div className="info-group">
+            <div className="info-row">
+              <span className="label">Wind</span>
+              <span className={`value ${flightInfo.flight.windAtCruiseAltCheck ? 'ok' : 'no'}`}>
+                {flightInfo.flight.windAtCruiseAltCheck ? (
+                  <SealCheck size={16} weight="fill" />
+                ) : (
+                  <SealWarning size={16} weight="fill" />
+                )}
+                {flightInfo.avgWind.toFixed(2)} m/s
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="label">Gust</span>
+              <span className={`value ${flightInfo.flight.maxGustAtCruiseAltCheck ? 'ok' : 'no'}`}>
+                {flightInfo.flight.maxGustAtCruiseAltCheck ? (
+                  <SealCheck size={16} weight="fill" />
+                ) : (
+                  <SealWarning size={16} weight="fill" />
+                )}
+                {flightInfo.gust.toFixed(2)} m/s
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="label">Outbound speed</span>
+              <span className={`value ${flightInfo.flight.outboundGroundSpeedCheck ? 'ok' : 'no'}`}>
+                {flightInfo.flight.outboundGroundSpeedCheck ? (
+                  <SealCheck size={16} weight="fill" />
+                ) : (
+                  <SealWarning size={16} weight="fill" />
+                )}
+                {flightInfo.flight.outboundGroundSpeed?.toFixed(1) ?? 'N/A'} m/s
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="label">Return speed</span>
+              <span className={`value ${flightInfo.flight.returnGroundSpeedCheck ? 'ok' : 'no'}`}>
+                {flightInfo.flight.returnGroundSpeedCheck ? (
+                  <SealCheck size={16} weight="fill" />
+                ) : (
+                  <SealWarning size={16} weight="fill" />
+                )}
+                {flightInfo.flight.returnGroundSpeed?.toFixed(1) ?? 'N/A'} m/s
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="label">Distance</span>
+              <span className={`value ${flightInfo.flight.outboundCapacityCheck ? 'ok' : 'no'}`}>
+                {flightInfo.flight.outboundCapacityCheck ? (
+                  <SealCheck size={16} weight="fill" />
+                ) : (
+                  <SealWarning size={16} weight="fill" />
+                )}
+                {flightInfo.distText}
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="label">Return Capacity</span>
+              <span className={`value ${flightInfo.flight.returnCapacityCheck ? 'ok' : 'no'}`}>
+                {flightInfo.flight.returnCapacityCheck ? (
+                  <SealCheck size={16} weight="fill" />
+                ) : (
+                  <SealWarning size={16} weight="fill" />
+                )}
+                {flightInfo.returnCapacity.toFixed(2)} Ah
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="label">Return at mission time</span>
+              <span className={`value ${flightInfo.flight.timeOnStationBatteryCheck ? 'ok' : 'no'}`}>
+                {flightInfo.flight.timeOnStationBatteryCheck ? (
+                  <SealCheck size={16} weight="fill" />
+                ) : (
+                  <SealWarning size={16} weight="fill" />
+                )}
+                {flightInfo.returnTime}
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="label">Ground speed to dest</span>
+              <span className={`value ${flightInfo.flight.outboundGroundSpeedCheck ? 'ok' : 'no'}`}>
+                {flightInfo.flight.outboundGroundSpeedCheck ? (
+                  <SealCheck size={16} weight="fill" />
+                ) : (
+                  <SealWarning size={16} weight="fill" />
+                )}
+                {flightInfo.flight.outboundGroundSpeed?.toFixed(1)} m/s
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="label">Ground speed back</span>
+              <span className={`value ${flightInfo.flight.returnGroundSpeedCheck ? 'ok' : 'no'}`}>
+                {flightInfo.flight.returnGroundSpeedCheck ? (
+                  <SealCheck size={16} weight="fill" />
+                ) : (
+                  <SealWarning size={16} weight="fill" />
+                )}
+                {flightInfo.flight.returnGroundSpeed?.toFixed(1)} m/s
+              </span>
+            </div>
+            {kpData && (
+              <div className="info-row">
+                <span className="label">KP</span>
+                <span className={`value ${kpData.kp < 5 ? 'ok' : 'no'}`}>
+                  {kpData.kp < 5 ? (
+                    <SealCheck size={16} weight="fill" />
+                  ) : (
+                    <SealWarning size={16} weight="fill" />
+                  )}
+                  {kpData.kp}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {routeNoFlyZones.length > 0 && (
+            <div className="nfz-clearance">
+              <h4>No Fly Zones</h4>
+              {routeNoFlyZones.map(z => {
+                const id = getZoneId(z);
+                const name = z.properties?.name || z.properties?.id || 'Unnamed';
+                return (
+                  <div key={id} className="nfz-item">
+                    <span>{name}</span>
+                    <button onClick={() => handleClearZone(z)}>
+                      Clear for this flight
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
       {showAuth && (
