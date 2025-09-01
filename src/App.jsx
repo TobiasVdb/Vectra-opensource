@@ -6,14 +6,11 @@ import {
   Sun,
   ArrowClockwise,
   Stack,
-
-  UserCircle,
   Cloud,
   SealCheck,
   SealWarning,
   ChatCenteredText
 } from '@phosphor-icons/react';
-import AuthDialog from './AuthDialog';
 import FeedbackDialog from './FeedbackDialog';
 import { isZoneActive } from './fetchActiveGeozones.js';
 import { lineString, lineIntersect, bbox, length } from '@turf/turf';
@@ -1033,7 +1030,7 @@ export default function App() {
         </button>
         {kpData && (
           <button
-            className={`kp-pill glass-effect${kpData.kp > 5 ? ' high' : ''}`}
+            className="kp-pill glass-effect"
             disabled
             aria-label="Geomagnetic activity (Pro only)"
             title="Geomagnetic activity (Pro only)"
@@ -1091,25 +1088,6 @@ export default function App() {
         >
           <ChatCenteredText size={18} />
         </button>
-        {isLoggedIn ? (
-          <button
-            className="glass-effect"
-            onClick={logout}
-            aria-label="Logout"
-            title="Logout"
-          >
-            {displayName.charAt(0).toUpperCase()}
-          </button>
-        ) : (
-          <button
-            className="glass-effect"
-            onClick={() => setShowAuth(true)}
-            aria-label="Login/Register"
-            title="Login/Register"
-          >
-            <UserCircle size={18} />
-          </button>
-        )}
       </div>
       {flightInfo && (
         <div className="info-panel glass-effect">
@@ -1279,15 +1257,6 @@ export default function App() {
             </div>
           )}
         </div>
-      )}
-      {showAuth && (
-        <AuthDialog
-          onAuthenticated={email => {
-            setIsLoggedIn(true);
-            setDisplayName(email);
-          }}
-          onClose={() => setShowAuth(false)}
-        />
       )}
       {showFeedback && (
         <FeedbackDialog onClose={() => setShowFeedback(false)} />
