@@ -178,6 +178,7 @@ export default function App() {
   const [startLngError, setStartLngError] = useState('');
   const [latError, setLatError] = useState('');
   const [lngError, setLngError] = useState('');
+  const [flightPath, setFlightPath] = useState([]);
 
   const flightInfo = useMemo(() => {
     if (flightPath.length < 2 || !selected) return null;
@@ -276,7 +277,6 @@ export default function App() {
   const initialLayerIdsRef = useRef([]);
   const [layerFeatures, setLayerFeatures] = useState([]);
   const [routeNoFlyZones, setRouteNoFlyZones] = useState([]);
-  const [flightPath, setFlightPath] = useState([]);
   const [clearedZoneIds, setClearedZoneIds] = useState([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showWeather, setShowWeather] = useState(false);
