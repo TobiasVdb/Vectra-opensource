@@ -273,8 +273,8 @@ export default function App() {
   const [mapStyleIndex, setMapStyleIndex] = useState(0);
   const [layers, setLayers] = useState([]);
   const [showLayers, setShowLayers] = useState(false);
-  const [selectedLayerIds, setSelectedLayerIds] = useState([]);
-  const initialLayerIdsRef = useRef([]);
+  const [selectedLayerId, setSelectedLayerId] = useState(null);
+  const initialLayerIdRef = useRef(null);
   const [layerFeatures, setLayerFeatures] = useState([]);
   const [routeNoFlyZones, setRouteNoFlyZones] = useState([]);
   const [clearedZoneIds, setClearedZoneIds] = useState([]);
@@ -289,24 +289,28 @@ export default function App() {
 
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem('selectedLayerIds') || '[]');
-      if (Array.isArray(saved)) {
-        initialLayerIdsRef.current = saved;
+      const saved = localStorage.getItem('selectedLayerId');
+      if (saved) {
+        initialLayerIdRef.current = saved;
       }
     } catch (e) {
-      console.error('Failed to parse saved layer ids', e);
+      console.error('Failed to read saved layer id', e);
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('selectedLayerIds', JSON.stringify(selectedLayerIds));
-  }, [selectedLayerIds]);
+    if (selectedLayerId) {
+      localStorage.setItem('selectedLayerId', selectedLayerId);
+    } else {
+      localStorage.removeItem('selectedLayerId');
+    }
+  }, [selectedLayerId]);
 
   useEffect(() => {
-    if (!mapLoaded || initialLayerIdsRef.current.length === 0) return;
-    const ids = [...initialLayerIdsRef.current];
-    initialLayerIdsRef.current = [];
-    ids.forEach(id => toggleLayer(id));
+    if (!mapLoaded || !initialLayerIdRef.current) return;
+    const id = initialLayerIdRef.current;
+    initialLayerIdRef.current = null;
+    toggleLayer(id);
   }, [mapLoaded]);
 
   // init map
@@ -741,7 +745,25 @@ export default function App() {
     const fillId = `uas-layer-fill-${id}`;
     const outlineId = `uas-layer-outline-${id}`;
     const sourceId = `uas-layer-${id}`;
-    if (selectedLayerIds.includes(id)) {
+    if (selectedLayerId && selectedLayerId !== id) {
+      const prevFill = `uas-layer-fill-${selectedLayerId}`;
+      const prevOutline = `uas-layer-outline-${selectedLayerId}`;
+      const prevSource = `uas-layer-${selectedLayerId}`;
+      if (map.getLayer(prevFill)) map.removeLayer(prevFill);
+      if (map.getLayer(prevOutline)) map.removeLayer(prevOutline);
+      if (map.getSource(prevSource)) map.removeSource(prevSource);
+      const prevHandlers = noFlyHandlersRef.current[selectedLayerId];
+      if (prevHandlers) {
+        map.off('click', prevFill, prevHandlers.click);
+        map.off('mouseenter', prevFill, prevHandlers.mouseenter);
+        map.off('mouseleave', prevFill, prevHandlers.mouseleave);
+        delete noFlyHandlersRef.current[selectedLayerId];
+      }
+      delete layerFeaturesRef.current[selectedLayerId];
+      setLayerFeatures(Object.values(layerFeaturesRef.current).flat());
+      setSelectedLayerId(null);
+    }
+    if (selectedLayerId === id) {
       if (map.getLayer(fillId)) map.removeLayer(fillId);
       if (map.getLayer(outlineId)) map.removeLayer(outlineId);
       if (map.getSource(sourceId)) map.removeSource(sourceId);
@@ -754,7 +776,7 @@ export default function App() {
       }
       delete layerFeaturesRef.current[id];
       setLayerFeatures(Object.values(layerFeaturesRef.current).flat());
-      setSelectedLayerIds(ids => ids.filter(lid => lid !== id));
+      setSelectedLayerId(null);
       return;
     }
 
@@ -994,7 +1016,7 @@ export default function App() {
         mouseenter: mouseEnterHandler,
         mouseleave: mouseLeaveHandler
       };
-      setSelectedLayerIds(ids => [...ids, id]);
+      setSelectedLayerId(id);
     } catch (e) {
       console.error('Failed to load layer', e);
     }
@@ -1290,7 +1312,7 @@ export default function App() {
             {layers.map(l => (
               <li key={l.id}>
                 <button
-                  className={`dest-btn${selectedLayerIds.includes(l.id) ? ' active' : ''}`}
+                  className={`dest-btn${selectedLayerId === l.id ? ' active' : ''}`}
                   onClick={() => toggleLayer(l.id)}
                 >
                   {l.name || l.title || `Layer ${l.id}`}
