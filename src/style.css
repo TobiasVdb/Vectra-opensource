@@ -668,6 +668,8 @@ body.light .nfz-popup-nav button {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 6px;
+  border-left: 4px solid #f7931e;
+  padding-left: 6px;
 }
 
 .nfz-item button {
