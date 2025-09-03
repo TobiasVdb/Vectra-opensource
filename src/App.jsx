@@ -268,8 +268,8 @@ export default function App() {
 
   const [kpData, setKpData] = useState(null);
   const [showKp, setShowKp] = useState(false);
-  // map display mode: '2d', '3d', or '3e' (3D with terrain elevation); default '3e'
-  const [mapMode, setMapMode] = useState('3e');
+  // map display mode: '2d', '3d', or '3e' (3D with terrain elevation); default '2d'
+  const [mapMode, setMapMode] = useState('2d');
   const [mapStyleIndex, setMapStyleIndex] = useState(0);
   const [layers, setLayers] = useState([]);
   const [showLayers, setShowLayers] = useState(false);
@@ -703,11 +703,6 @@ export default function App() {
     setMapMode(mode);
   }
 
-  function cycleMapMode() {
-    const next = mapMode === '2d' ? '3d' : mapMode === '3d' ? '3e' : '2d';
-    applyMapMode(next);
-  }
-
   function cycleMapStyle() {
     setMapLoaded(false);
     setMapStyleIndex(i => (i + 1) % MAP_STYLES.length);
@@ -1063,11 +1058,12 @@ export default function App() {
         )}
         <button
           className="btn-3d glass-effect"
-          onClick={cycleMapMode}
-          aria-label="Camera mode"
-          title="Camera (2D, 3D or 3E)"
+          disabled
+          aria-label="Camera mode (Pro only)"
+          title="Camera mode (Pro only)"
         >
-          {mapMode === '2d' ? '3D' : mapMode === '3d' ? '3E' : '2D'}
+          3D
+          <span className="pro-tag">Pro</span>
         </button>
         <button
           className="glass-effect"
