@@ -21,7 +21,8 @@ import {
   length,
   point,
   booleanPointInPolygon,
-  distance
+  distance,
+  polygonToLine
 } from '@turf/turf';
 import {
   estimateActualDistance,
@@ -145,6 +146,7 @@ function calculateAvoidingPath(start, dest, zones = []) {
   // Collect nodes (start, dest, polygon vertices)
   const nodes = [start, dest];
   const polys = [];
+  const polyLines = [];
   // Only consider zones that intersect the direct path to reduce
   // unnecessary computation and avoid freezing the UI when many zones
   // are loaded. Previously we iterated over *all* zones which could
@@ -157,6 +159,7 @@ function calculateAvoidingPath(start, dest, zones = []) {
       geom.type === 'Polygon' || geom.type === 'MultiPolygon' ? geom : null;
     if (!poly) return;
     polys.push(poly);
+    polyLines.push(polygonToLine(poly));
     const rings =
       geom.type === 'Polygon'
         ? [geom.coordinates[0]]
@@ -172,14 +175,15 @@ function calculateAvoidingPath(start, dest, zones = []) {
 
   function segmentIntersects(a, b) {
     const seg = lineString([a, b]);
-    for (const poly of polys) {
+    for (let i = 0; i < polys.length; i++) {
+      const poly = polys[i];
       if (
         booleanPointInPolygon(point(a), poly, { ignoreBoundary: true }) ||
         booleanPointInPolygon(point(b), poly, { ignoreBoundary: true })
       ) {
         return true;
       }
-      const inter = lineIntersect(seg, poly);
+      const inter = lineIntersect(seg, polyLines[i]);
       if (inter.features.length > 0) {
         const allAtEnds = inter.features.every(feat => {
           const [x, y] = feat.geometry.coordinates;
@@ -665,9 +669,10 @@ export default function App() {
           source: 'flight-trials',
           layout: { 'line-cap': 'round' },
           paint: {
-            'line-color': '#cccccc',
+            'line-color': '#ffffff',
             'line-width': 2,
-            'line-dasharray': [1, 1]
+            'line-dasharray': [1, 1],
+            'line-opacity': 0.15
           }
         });
       }
