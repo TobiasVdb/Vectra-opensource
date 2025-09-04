@@ -129,11 +129,9 @@ function calculateAvoidingPath(start, dest, zones = []) {
     const geom = z.geometry;
     if (!geom) return;
     const poly =
-      geom.type === 'Polygon'
+      geom.type === 'Polygon' || geom.type === 'MultiPolygon'
         ? geom
-        : geom.type === 'MultiPolygon'
-          ? { type: 'Polygon', coordinates: geom.coordinates[0] }
-          : null;
+        : null;
     if (!poly) return;
     const line = lineString(path);
     if (lineIntersect(line, poly).features.length > 0) {
@@ -168,16 +166,22 @@ function calculateAvoidingPath(start, dest, zones = []) {
         ] // right
       ];
 
-      let best = candidates[0];
-      let bestLen = length(lineString(best));
-      for (let i = 1; i < candidates.length; i++) {
-        const len = length(lineString(candidates[i]));
-        if (len < bestLen) {
-          bestLen = len;
-          best = candidates[i];
+      const valid = candidates.filter(
+        c => lineIntersect(lineString(c), poly).features.length === 0
+      );
+
+      if (valid.length > 0) {
+        let best = valid[0];
+        let bestLen = length(lineString(best));
+        for (let i = 1; i < valid.length; i++) {
+          const len = length(lineString(valid[i]));
+          if (len < bestLen) {
+            bestLen = len;
+            best = valid[i];
+          }
         }
+        path = best;
       }
-      path = best;
     }
   });
   return { path, intersected };
