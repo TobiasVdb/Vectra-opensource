@@ -140,21 +140,44 @@ function calculateAvoidingPath(start, dest, zones = []) {
       intersected.push(z);
       const box = bbox(poly); // [minX, minY, maxX, maxY]
       const offset = 0.01;
-      const above = [
-        start,
-        [start[0], box[3] + offset],
-        [dest[0], box[3] + offset],
-        dest
+
+      const candidates = [
+        [
+          start,
+          [start[0], box[3] + offset],
+          [dest[0], box[3] + offset],
+          dest
+        ], // above
+        [
+          start,
+          [start[0], box[1] - offset],
+          [dest[0], box[1] - offset],
+          dest
+        ], // below
+        [
+          start,
+          [box[0] - offset, start[1]],
+          [box[0] - offset, dest[1]],
+          dest
+        ], // left
+        [
+          start,
+          [box[2] + offset, start[1]],
+          [box[2] + offset, dest[1]],
+          dest
+        ] // right
       ];
-      const below = [
-        start,
-        [start[0], box[1] - offset],
-        [dest[0], box[1] - offset],
-        dest
-      ];
-      const aboveLen = length(lineString(above));
-      const belowLen = length(lineString(below));
-      path = aboveLen < belowLen ? above : below;
+
+      let best = candidates[0];
+      let bestLen = length(lineString(best));
+      for (let i = 1; i < candidates.length; i++) {
+        const len = length(lineString(candidates[i]));
+        if (len < bestLen) {
+          bestLen = len;
+          best = candidates[i];
+        }
+      }
+      path = best;
     }
   });
   return { path, intersected };

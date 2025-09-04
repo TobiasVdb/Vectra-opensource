@@ -501,7 +501,7 @@ export async function fetchOverpassData(lat, lon, signal, state) {
         }
     }
 }
-export function getTotalFlightTimeRequiredFromTakeOffToLandingWithoutTimeOnStationInMinutes() {
+export function getTotalFlightTimeRequiredFromTakeOffToLandingWithoutTimeOnStationInMinutes(distance) {
     return calculateTakeoffToCruise()
         + calculateLanding()
         + calculateCruisePhaseToDestination(distance)
@@ -572,7 +572,11 @@ export function estimateActualDistance(flightPath = []) {
     for (let i = 1; i < flightPath.length; i++) {
         const a = flightPath[i - 1];
         const b = flightPath[i];
-        dist += getDistanceMeters(a.lat, a.lon, b.lat, b.lon);
+        const [lon1, lat1] = Array.isArray(a) ? [a[0], a[1]] : [a.lon, a.lat];
+        const [lon2, lat2] = Array.isArray(b) ? [b[0], b[1]] : [b.lon, b.lat];
+        if ([lat1, lon1, lat2, lon2].every(Number.isFinite)) {
+            dist += getDistanceMeters(lat1, lon1, lat2, lon2);
+        }
     }
     return dist / 1000;
 }
