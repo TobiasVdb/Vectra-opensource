@@ -636,9 +636,8 @@ export default function App() {
     setRouteNoFlyZones(zones => zones.filter(z => getZoneId(z) !== id));
     const newCleared = [...clearedZoneIds, id];
     setClearedZoneIds(newCleared);
-    if (selected) {
-      focusDestination(selected, newCleared);
-    }
+    // focusDestination will be triggered by the clearedZoneIds effect,
+    // ensuring cleared zones are excluded from the flight path
   }
 
   function applyMapMode(mode) {
