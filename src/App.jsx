@@ -139,31 +139,16 @@ function calculateAvoidingPath(start, dest, zones = []) {
       const box = bbox(poly); // [minX, minY, maxX, maxY]
       const offset = 0.01;
 
+      const topLeft = [box[0] - offset, box[3] + offset];
+      const topRight = [box[2] + offset, box[3] + offset];
+      const bottomLeft = [box[0] - offset, box[1] - offset];
+      const bottomRight = [box[2] + offset, box[1] - offset];
+
       const candidates = [
-        [
-          start,
-          [start[0], box[3] + offset],
-          [dest[0], box[3] + offset],
-          dest
-        ], // above
-        [
-          start,
-          [start[0], box[1] - offset],
-          [dest[0], box[1] - offset],
-          dest
-        ], // below
-        [
-          start,
-          [box[0] - offset, start[1]],
-          [box[0] - offset, dest[1]],
-          dest
-        ], // left
-        [
-          start,
-          [box[2] + offset, start[1]],
-          [box[2] + offset, dest[1]],
-          dest
-        ] // right
+        [start, topLeft, topRight, dest], // above
+        [start, bottomLeft, bottomRight, dest], // below
+        [start, bottomLeft, topLeft, dest], // left
+        [start, bottomRight, topRight, dest] // right
       ];
 
       const valid = candidates.filter(
