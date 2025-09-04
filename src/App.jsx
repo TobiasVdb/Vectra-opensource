@@ -13,7 +13,15 @@ import {
 } from '@phosphor-icons/react';
 import FeedbackDialog from './FeedbackDialog';
 import { isZoneActive } from './fetchActiveGeozones.js';
-import { lineString, lineIntersect, bbox, length } from '@turf/turf';
+import {
+  lineString,
+  lineIntersect,
+  bbox,
+  length,
+  point,
+  booleanPointInPolygon,
+  distance
+} from '@turf/turf';
 import {
   estimateActualDistance,
   getFlightGoNoGo,
@@ -123,52 +131,111 @@ function generateHoverCircle(center, radiusMeters = 50, points = 60) {
 }
 
 function calculateAvoidingPath(start, dest, zones = []) {
-  let path = [start, dest];
-  const intersected = [];
+  const direct = lineString([start, dest]);
+  const intersected = zones.filter(z => {
+    const geom = z.geometry;
+    if (!geom) return false;
+    const poly =
+      geom.type === 'Polygon' || geom.type === 'MultiPolygon' ? geom : null;
+    if (!poly) return false;
+    return lineIntersect(direct, poly).features.length > 0;
+  });
+
+  // Collect nodes (start, dest, polygon vertices)
+  const nodes = [start, dest];
+  const polys = [];
   zones.forEach(z => {
     const geom = z.geometry;
     if (!geom) return;
     const poly =
-      geom.type === 'Polygon' || geom.type === 'MultiPolygon'
-        ? geom
-        : null;
+      geom.type === 'Polygon' || geom.type === 'MultiPolygon' ? geom : null;
     if (!poly) return;
-    const line = lineString(path);
-    if (lineIntersect(line, poly).features.length > 0) {
-      intersected.push(z);
-      const box = bbox(poly); // [minX, minY, maxX, maxY]
-      const offset = 0.01;
+    polys.push(poly);
+    const rings =
+      geom.type === 'Polygon'
+        ? [geom.coordinates[0]]
+        : geom.coordinates.map(p => p[0]);
+    rings.forEach(ring => {
+      ring.forEach(c => nodes.push(c));
+    });
+  });
 
-      const topLeft = [box[0] - offset, box[3] + offset];
-      const topRight = [box[2] + offset, box[3] + offset];
-      const bottomLeft = [box[0] - offset, box[1] - offset];
-      const bottomRight = [box[2] + offset, box[1] - offset];
+  const n = nodes.length;
+  const adj = new Map();
+  for (let i = 0; i < n; i++) adj.set(i, []);
 
-      const candidates = [
-        [start, topLeft, topRight, dest], // above
-        [start, bottomLeft, bottomRight, dest], // below
-        [start, bottomLeft, topLeft, dest], // left
-        [start, bottomRight, topRight, dest] // right
-      ];
-
-      const valid = candidates.filter(
-        c => lineIntersect(lineString(c), poly).features.length === 0
-      );
-
-      if (valid.length > 0) {
-        let best = valid[0];
-        let bestLen = length(lineString(best));
-        for (let i = 1; i < valid.length; i++) {
-          const len = length(lineString(valid[i]));
-          if (len < bestLen) {
-            bestLen = len;
-            best = valid[i];
-          }
-        }
-        path = best;
+  function segmentIntersects(a, b) {
+    const seg = lineString([a, b]);
+    for (const poly of polys) {
+      if (
+        booleanPointInPolygon(point(a), poly, { ignoreBoundary: true }) ||
+        booleanPointInPolygon(point(b), poly, { ignoreBoundary: true })
+      ) {
+        return true;
+      }
+      const inter = lineIntersect(seg, poly);
+      if (inter.features.length > 0) {
+        const allAtEnds = inter.features.every(feat => {
+          const [x, y] = feat.geometry.coordinates;
+          return (
+            (Math.abs(x - a[0]) < 1e-9 && Math.abs(y - a[1]) < 1e-9) ||
+            (Math.abs(x - b[0]) < 1e-9 && Math.abs(y - b[1]) < 1e-9)
+          );
+        });
+        if (!allAtEnds) return true;
       }
     }
-  });
+    return false;
+  }
+
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (!segmentIntersects(nodes[i], nodes[j])) {
+        const w = distance(point(nodes[i]), point(nodes[j]));
+        adj.get(i).push({ to: j, w });
+        adj.get(j).push({ to: i, w });
+      }
+    }
+  }
+
+  // Dijkstra from start (index 0) to dest (index 1)
+  const dist = Array(n).fill(Infinity);
+  const prev = Array(n).fill(null);
+  const visited = new Set();
+  dist[0] = 0;
+
+  while (visited.size < n) {
+    let u = -1;
+    let best = Infinity;
+    for (let i = 0; i < n; i++) {
+      if (!visited.has(i) && dist[i] < best) {
+        best = dist[i];
+        u = i;
+      }
+    }
+    if (u === -1 || u === 1) break;
+    visited.add(u);
+    for (const { to, w } of adj.get(u)) {
+      if (dist[u] + w < dist[to]) {
+        dist[to] = dist[u] + w;
+        prev[to] = u;
+      }
+    }
+  }
+
+  let path;
+  if (dist[1] === Infinity) {
+    path = [start, dest];
+  } else {
+    const rev = [];
+    let u = 1;
+    while (u !== null) {
+      rev.push(nodes[u]);
+      u = prev[u];
+    }
+    path = rev.reverse();
+  }
+
   return { path, intersected };
 }
 
