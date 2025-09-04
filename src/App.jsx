@@ -746,15 +746,40 @@ export default function App() {
     }
   }
 
+  function toggleFlights() {
+    if (showDialog) {
+      clearOverlays();
+      if (mapRef.current) {
+        mapRef.current.stop();
+        if (mapRef.current.getLayer('flight')) {
+          mapRef.current.removeLayer('flight');
+        }
+        if (mapRef.current.getSource('flight')) {
+          mapRef.current.removeSource('flight');
+        }
+      }
+    } else {
+      resetView();
+    }
+  }
+
   function rotateMap() {
     if (!mapRef.current) return;
     const bearing = mapRef.current.getBearing();
     mapRef.current.rotateTo(bearing + 90, { duration: 500 });
   }
 
-  function openLayers() {
-    clearOverlays();
-    setShowLayers(true);
+  function toggleLayers() {
+    if (showLayers) {
+      clearOverlays();
+    } else {
+      clearOverlays();
+      setShowLayers(true);
+    }
+  }
+
+  function toggleFeedback() {
+    setShowFeedback(v => !v);
   }
 
   async function toggleLayer(id) {
@@ -1098,7 +1123,7 @@ export default function App() {
         </button>
         <button
           className="glass-effect"
-          onClick={resetView}
+          onClick={toggleFlights}
           aria-label="Flights"
           title="Flights"
         >
@@ -1115,7 +1140,7 @@ export default function App() {
         </button>
         <button
           className="glass-effect"
-          onClick={openLayers}
+          onClick={toggleLayers}
           aria-label="Layers/No Fly Zones"
           title="Layers/No Fly Zones"
         >
@@ -1124,7 +1149,7 @@ export default function App() {
 
         <button
           className="glass-effect"
-          onClick={() => setShowFeedback(true)}
+          onClick={toggleFeedback}
           aria-label="Feedback"
         >
           <ChatCenteredText size={18} />
