@@ -447,11 +447,29 @@ export default function App() {
       mapRef.current.remove();
     }
     setMapLoaded(false);
+    let initialCenter = [4.4699, 50.5039];
+    let initialZoom = 7;
+    try {
+      const saved = localStorage.getItem('mapView');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (
+          Array.isArray(parsed.center) &&
+          parsed.center.length === 2 &&
+          typeof parsed.zoom === 'number'
+        ) {
+          initialCenter = parsed.center;
+          initialZoom = parsed.zoom;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load saved map view', e);
+    }
     mapRef.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: currentStyle.style,
-      center: [4.4699, 50.5039],
-      zoom: 7,
+      center: initialCenter,
+      zoom: initialZoom,
       pitch: mapMode === '2d' ? 0 : 60,
       attributionControl: false
     });
@@ -468,6 +486,21 @@ export default function App() {
   useEffect(() => {
     document.body.classList.toggle('light', !isDark);
   }, [isDark]);
+
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+    const map = mapRef.current;
+    const saveView = () => {
+      const center = map.getCenter();
+      const zoom = map.getZoom();
+      localStorage.setItem(
+        'mapView',
+        JSON.stringify({ center: [center.lng, center.lat], zoom })
+      );
+    };
+    map.on('moveend', saveView);
+    return () => map.off('moveend', saveView);
+  }, [mapLoaded]);
 
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
