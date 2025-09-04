@@ -204,6 +204,8 @@ function calculateAvoidingPath(start, dest, zones = []) {
   const visited = new Set();
   dist[0] = 0;
 
+  const explored = [];
+
   while (visited.size < n) {
     let u = -1;
     let best = Infinity;
@@ -216,6 +218,7 @@ function calculateAvoidingPath(start, dest, zones = []) {
     if (u === -1 || u === 1) break;
     visited.add(u);
     for (const { to, w } of adj.get(u)) {
+      explored.push([nodes[u], nodes[to]]);
       if (dist[u] + w < dist[to]) {
         dist[to] = dist[u] + w;
         prev[to] = u;
@@ -236,7 +239,7 @@ function calculateAvoidingPath(start, dest, zones = []) {
     path = rev.reverse();
   }
 
-  return { path, intersected };
+  return { path, intersected, explored };
 }
 
 export default function App() {
@@ -615,29 +618,53 @@ export default function App() {
         parseFloat(dest.startLatitude)
       ];
       const circle = generateHoverCircle(destCoord);
-      const { path, intersected } = calculateAvoidingPath(
+      const { path, intersected, explored } = calculateAvoidingPath(
         startCoord,
         destCoord,
         layerFeatures
       );
       setRouteNoFlyZones(intersected);
       setFlightPath(path);
+
+      const trialFeatures = explored.map(coords => ({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: coords }
+      }));
+
       data = {
         type: 'FeatureCollection',
         features: [
-          {
-            type: 'Feature',
-            geometry: { type: 'LineString', coordinates: path }
-          },
-          {
-            type: 'Feature',
-            geometry: { type: 'LineString', coordinates: circle }
-          }
+          { type: 'Feature', geometry: { type: 'LineString', coordinates: path } },
+          { type: 'Feature', geometry: { type: 'LineString', coordinates: circle } }
         ]
       };
+
+      const trialData = {
+        type: 'FeatureCollection',
+        features: trialFeatures
+      };
+
       bounds.extend(startCoord);
       path.forEach(c => bounds.extend(c));
       circle.forEach(c => bounds.extend(c));
+      explored.forEach(seg => seg.forEach(c => bounds.extend(c)));
+
+      if (map.getSource('flight-trials')) {
+        map.getSource('flight-trials').setData(trialData);
+      } else {
+        map.addSource('flight-trials', { type: 'geojson', data: trialData });
+        map.addLayer({
+          id: 'flight-trials',
+          type: 'line',
+          source: 'flight-trials',
+          layout: { 'line-cap': 'round' },
+          paint: {
+            'line-color': '#cccccc',
+            'line-width': 2,
+            'line-dasharray': [1, 1]
+          }
+        });
+      }
     } else {
       const hoverCircle = generateHoverCircle(destCoord);
       data = {
@@ -646,6 +673,12 @@ export default function App() {
       };
       setFlightPath([]);
       hoverCircle.forEach(c => bounds.extend(c));
+      if (map.getSource('flight-trials')) {
+        map.getSource('flight-trials').setData({
+          type: 'FeatureCollection',
+          features: []
+        });
+      }
     }
     if (map.getSource('flight')) {
       map.getSource('flight').setData(data);
