@@ -9,7 +9,8 @@ import {
   Cloud,
   SealCheck,
   SealWarning,
-  ChatCenteredText
+  ChatCenteredText,
+  Airplane
 } from '@phosphor-icons/react';
 import FeedbackDialog from './FeedbackDialog';
 import { isZoneActive } from './fetchActiveGeozones.js';
@@ -1182,7 +1183,7 @@ export default function App() {
           aria-label="Flights"
           title="Flights"
         >
-          <Globe size={18} />
+          <Airplane size={18} />
         </button>
         <button
           className="glass-effect"
