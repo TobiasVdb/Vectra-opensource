@@ -145,7 +145,12 @@ function calculateAvoidingPath(start, dest, zones = []) {
   // Collect nodes (start, dest, polygon vertices)
   const nodes = [start, dest];
   const polys = [];
-  zones.forEach(z => {
+  // Only consider zones that intersect the direct path to reduce
+  // unnecessary computation and avoid freezing the UI when many zones
+  // are loaded. Previously we iterated over *all* zones which could
+  // introduce thousands of vertices even if they were far away from the
+  // planned route.
+  intersected.forEach(z => {
     const geom = z.geometry;
     if (!geom) return;
     const poly =
