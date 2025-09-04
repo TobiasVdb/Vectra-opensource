@@ -1294,19 +1294,6 @@ export default function App() {
                 {flightInfo.flight.returnGroundSpeed?.toFixed(1)} m/s
               </span>
             </div>
-            {kpData && (
-              <div className="info-row">
-                <span className="label">KP</span>
-                <span className={`value ${kpData.kp < 5 ? 'ok' : 'no'}`}>
-                  {kpData.kp < 5 ? (
-                    <SealCheck size={16} weight="fill" />
-                  ) : (
-                    <SealWarning size={16} weight="fill" />
-                  )}
-                  {kpData.kp}
-                </span>
-              </div>
-            )}
           </div>
 
           {routeNoFlyZones.length > 0 && (
