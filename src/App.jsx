@@ -254,15 +254,7 @@ function calculateAvoidingPath(start, dest, zones = []) {
   }
 
   // Start with zones intersecting the direct path
-  const direct = lineString([start, dest]);
-  let considered = zones.filter(z => {
-    const geom = z.geometry;
-    if (!geom) return false;
-    const poly =
-      geom.type === 'Polygon' || geom.type === 'MultiPolygon' ? geom : null;
-    if (!poly) return false;
-    return lineIntersect(direct, poly).features.length > 0;
-  });
+  let considered = zones.filter(z => pathIntersectsZone([start, dest], z));
 
   let path = [start, dest];
   let explored = [];
