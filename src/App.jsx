@@ -133,8 +133,129 @@ function generateHoverCircle(center, radiusMeters = 50, points = 60) {
 }
 
 function calculateAvoidingPath(start, dest, zones = []) {
+  // Helper that checks whether a path intersects a given zone
+  function pathIntersectsZone(path, zone) {
+    const geom = zone.geometry;
+    if (!geom) return false;
+    const poly =
+      geom.type === 'Polygon' || geom.type === 'MultiPolygon' ? geom : null;
+    if (!poly) return false;
+    const line = lineString(path);
+    // Intersect with polygon boundary
+    if (lineIntersect(line, polygonToLine(poly)).features.length > 0) return true;
+    // Or any point lies inside
+    return path.some(c => booleanPointInPolygon(point(c), poly));
+  }
+
+  // Build a visibility graph for provided zones and run Dijkstra
+  function buildPath(considered) {
+    // Collect nodes (start, dest, polygon vertices)
+    const nodes = [start, dest];
+    const polys = [];
+    const polyLines = [];
+    considered.forEach(z => {
+      const geom = z.geometry;
+      if (!geom) return;
+      const poly =
+        geom.type === 'Polygon' || geom.type === 'MultiPolygon' ? geom : null;
+      if (!poly) return;
+      polys.push(poly);
+      polyLines.push(polygonToLine(poly));
+      const rings =
+        geom.type === 'Polygon'
+          ? [geom.coordinates[0]]
+          : geom.coordinates.map(p => p[0]);
+      rings.forEach(ring => {
+        ring.forEach(c => nodes.push(c));
+      });
+    });
+
+    const n = nodes.length;
+    const adj = new Map();
+    for (let i = 0; i < n; i++) adj.set(i, []);
+
+    function segmentIntersects(a, b) {
+      const seg = lineString([a, b]);
+      for (let i = 0; i < polys.length; i++) {
+        const poly = polys[i];
+        if (
+          booleanPointInPolygon(point(a), poly, { ignoreBoundary: true }) ||
+          booleanPointInPolygon(point(b), poly, { ignoreBoundary: true })
+        ) {
+          return true;
+        }
+        const inter = lineIntersect(seg, polyLines[i]);
+        if (inter.features.length > 0) {
+          const allAtEnds = inter.features.every(feat => {
+            const [x, y] = feat.geometry.coordinates;
+            return (
+              (Math.abs(x - a[0]) < 1e-9 && Math.abs(y - a[1]) < 1e-9) ||
+              (Math.abs(x - b[0]) < 1e-9 && Math.abs(y - b[1]) < 1e-9)
+            );
+          });
+          if (!allAtEnds) return true;
+        }
+      }
+      return false;
+    }
+
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        if (!segmentIntersects(nodes[i], nodes[j])) {
+          const w = distance(point(nodes[i]), point(nodes[j]));
+          adj.get(i).push({ to: j, w });
+          adj.get(j).push({ to: i, w });
+        }
+      }
+    }
+
+    // Dijkstra from start (index 0) to dest (index 1)
+    const dist = Array(n).fill(Infinity);
+    const prev = Array(n).fill(null);
+    const visited = new Set();
+    dist[0] = 0;
+
+    const explored = [];
+
+    while (visited.size < n) {
+      let u = -1;
+      let best = Infinity;
+      for (let i = 0; i < n; i++) {
+        if (!visited.has(i) && dist[i] < best) {
+          best = dist[i];
+          u = i;
+        }
+      }
+      if (u === -1 || u === 1) break;
+      visited.add(u);
+      for (const { to, w } of adj.get(u)) {
+        explored.push([nodes[u], nodes[to]]);
+        if (dist[u] + w < dist[to]) {
+          dist[to] = dist[u] + w;
+          prev[to] = u;
+        }
+      }
+    }
+
+    let path;
+    if (dist[1] === Infinity) {
+      path = [start, dest];
+    } else {
+      const rev = [];
+      let u = 1;
+      while (u !== null) {
+        rev.push(nodes[u]);
+        u = prev[u];
+      }
+      path = rev.reverse();
+    }
+
+    return { path, explored };
+  }
+
+  // Start with zones intersecting the direct path
   const direct = lineString([start, dest]);
-  const intersected = zones.filter(z => {
+  let considered = zones.filter(z => {
     const geom = z.geometry;
     if (!geom) return false;
     const poly =
@@ -143,113 +264,28 @@ function calculateAvoidingPath(start, dest, zones = []) {
     return lineIntersect(direct, poly).features.length > 0;
   });
 
-  // Collect nodes (start, dest, polygon vertices)
-  const nodes = [start, dest];
-  const polys = [];
-  const polyLines = [];
-  // Only consider zones that intersect the direct path to reduce
-  // unnecessary computation and avoid freezing the UI when many zones
-  // are loaded. Previously we iterated over *all* zones which could
-  // introduce thousands of vertices even if they were far away from the
-  // planned route.
-  intersected.forEach(z => {
-    const geom = z.geometry;
-    if (!geom) return;
-    const poly =
-      geom.type === 'Polygon' || geom.type === 'MultiPolygon' ? geom : null;
-    if (!poly) return;
-    polys.push(poly);
-    polyLines.push(polygonToLine(poly));
-    const rings =
-      geom.type === 'Polygon'
-        ? [geom.coordinates[0]]
-        : geom.coordinates.map(p => p[0]);
-    rings.forEach(ring => {
-      ring.forEach(c => nodes.push(c));
-    });
-  });
+  let path = [start, dest];
+  let explored = [];
+  let added = true;
+  let attempts = 0;
 
-  const n = nodes.length;
-  const adj = new Map();
-  for (let i = 0; i < n; i++) adj.set(i, []);
-
-  function segmentIntersects(a, b) {
-    const seg = lineString([a, b]);
-    for (let i = 0; i < polys.length; i++) {
-      const poly = polys[i];
-      if (
-        booleanPointInPolygon(point(a), poly, { ignoreBoundary: true }) ||
-        booleanPointInPolygon(point(b), poly, { ignoreBoundary: true })
-      ) {
-        return true;
-      }
-      const inter = lineIntersect(seg, polyLines[i]);
-      if (inter.features.length > 0) {
-        const allAtEnds = inter.features.every(feat => {
-          const [x, y] = feat.geometry.coordinates;
-          return (
-            (Math.abs(x - a[0]) < 1e-9 && Math.abs(y - a[1]) < 1e-9) ||
-            (Math.abs(x - b[0]) < 1e-9 && Math.abs(y - b[1]) < 1e-9)
-          );
-        });
-        if (!allAtEnds) return true;
-      }
-    }
-    return false;
-  }
-
-  for (let i = 0; i < n; i++) {
-    for (let j = i + 1; j < n; j++) {
-      if (!segmentIntersects(nodes[i], nodes[j])) {
-        const w = distance(point(nodes[i]), point(nodes[j]));
-        adj.get(i).push({ to: j, w });
-        adj.get(j).push({ to: i, w });
-      }
+  // Iteratively add zones that the computed path intersects
+  while (added && attempts < 5) {
+    attempts++;
+    const result = buildPath(considered);
+    path = result.path;
+    explored = result.explored;
+    const extra = zones.filter(
+      z => !considered.includes(z) && pathIntersectsZone(path, z)
+    );
+    if (extra.length === 0) {
+      added = false;
+    } else {
+      considered = considered.concat(extra);
     }
   }
 
-  // Dijkstra from start (index 0) to dest (index 1)
-  const dist = Array(n).fill(Infinity);
-  const prev = Array(n).fill(null);
-  const visited = new Set();
-  dist[0] = 0;
-
-  const explored = [];
-
-  while (visited.size < n) {
-    let u = -1;
-    let best = Infinity;
-    for (let i = 0; i < n; i++) {
-      if (!visited.has(i) && dist[i] < best) {
-        best = dist[i];
-        u = i;
-      }
-    }
-    if (u === -1 || u === 1) break;
-    visited.add(u);
-    for (const { to, w } of adj.get(u)) {
-      explored.push([nodes[u], nodes[to]]);
-      if (dist[u] + w < dist[to]) {
-        dist[to] = dist[u] + w;
-        prev[to] = u;
-      }
-    }
-  }
-
-  let path;
-  if (dist[1] === Infinity) {
-    path = [start, dest];
-  } else {
-    const rev = [];
-    let u = 1;
-    while (u !== null) {
-      rev.push(nodes[u]);
-      u = prev[u];
-    }
-    path = rev.reverse();
-  }
-
-  return { path, intersected, explored };
+  return { path, intersected: considered, explored };
 }
 
 export default function App() {
