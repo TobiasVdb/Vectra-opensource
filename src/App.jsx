@@ -621,12 +621,6 @@ export default function App() {
     loadLayers();
   }, [mapLoaded]);
 
-  useEffect(() => {
-    if (selected) {
-      focusDestination(selected, clearedZoneIds);
-    }
-  }, [clearedZoneIds]);
-
   function clearOverlays(options = {}) {
     const { keepSelected = false } = options;
     setShowDialog(false);
@@ -654,6 +648,7 @@ export default function App() {
 
     const destCoord = [parseFloat(dest.longitude), parseFloat(dest.latitude)];
     setRouteNoFlyZones([]);
+    const features = Object.values(layerFeaturesRef.current).flat();
     const hasStart =
       dest.startLatitude !== undefined && dest.startLongitude !== undefined;
     const bounds = new mapboxgl.LngLatBounds(destCoord, destCoord);
@@ -667,7 +662,7 @@ export default function App() {
       const { path, intersected, explored } = calculateAvoidingPath(
         startCoord,
         destCoord,
-        layerFeatures
+        features
       );
       setRouteNoFlyZones(intersected);
       setFlightPath(path);
@@ -768,8 +763,9 @@ export default function App() {
     setRouteNoFlyZones(zones => zones.filter(z => getZoneId(z) !== id));
     const newCleared = [...clearedZoneIds, id];
     setClearedZoneIds(newCleared);
-    // focusDestination will be triggered by the clearedZoneIds effect,
-    // ensuring cleared zones are excluded from the flight path
+    if (selected) {
+      focusDestination(selected, newCleared);
+    }
   }
 
   function applyMapMode(mode) {
