@@ -357,6 +357,31 @@ export default function App() {
   const [showWeather, setShowWeather] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
 
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('mapStyle');
+      if (saved) {
+        const index = MAP_STYLES.findIndex(s => s.key === saved);
+        if (index >= 0) {
+          setMapStyleIndex(index);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to read saved map style', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const key = MAP_STYLES[mapStyleIndex]?.key;
+      if (key) {
+        localStorage.setItem('mapStyle', key);
+      }
+    } catch (e) {
+      console.error('Failed to save map style', e);
+    }
+  }, [mapStyleIndex]);
+
   const currentStyle = MAP_STYLES[mapStyleIndex];
   const isDark = currentStyle.isDark;
   const nextStyle = MAP_STYLES[(mapStyleIndex + 1) % MAP_STYLES.length];
