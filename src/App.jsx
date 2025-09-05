@@ -986,6 +986,19 @@ export default function App() {
         paint: { 'line-color': colorExpression, 'line-width': 1.5 }
       });
 
+      // Orient the map to the bounds of the newly added layer
+      if (filtered.length) {
+        const [minLng, minLat, maxLng, maxLat] = bbox(geojson);
+        map.stop();
+        map.fitBounds(
+          [
+            [minLng, minLat],
+            [maxLng, maxLat]
+          ],
+          { padding: 40, pitch: mapMode === '2d' ? 0 : 60 }
+        );
+      }
+
       const clickHandler = e => {
         const features = e.features || [];
         if (!features.length) return;
