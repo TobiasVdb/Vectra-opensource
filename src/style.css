@@ -144,6 +144,10 @@ body.light .kp-pill {
   scrollbar-color: #555 #222;
 }
 
+body.light .dialog {
+  color: #000;
+}
+
 .dialog ul {
   list-style: none;
   padding: 0;
@@ -185,6 +189,16 @@ body.light .dialog li:hover {
   border-radius: 4px;
   cursor: pointer;
   transition: background 0.2s;
+}
+
+body.light .dialog button {
+  background: #eee;
+  color: #000;
+  border: 1px solid #ccc;
+}
+
+body.light .dialog button:hover:not(:disabled) {
+  background: #ddd;
 }
 
 .dest-btn {
@@ -260,6 +274,12 @@ body.light .dest-btn.active {
   padding: 4px;
 }
 
+body.light .flights-header select {
+  background: #fff;
+  color: #000;
+  border: 1px solid #ccc;
+}
+
 .flights-panel ul {
   list-style: none;
   padding: 0;
@@ -276,6 +296,10 @@ body.light .dest-btn.active {
   font-size: 12px;
   margin: 4px 0;
   color: #ccc;
+}
+
+body.light .manual-description {
+  color: #555;
 }
 
 .flight-btn {
@@ -367,6 +391,10 @@ body.light .dest-btn.active {
   font-size: 12px;
 }
 
+body.light .manual-entry label {
+  color: #000;
+}
+
 .manual-entry input {
   margin-top: 4px;
   width: 100%;
@@ -376,6 +404,16 @@ body.light .dest-btn.active {
   border: 1px solid #555;
   border-radius: 4px;
   color: #fff;
+}
+
+body.light .manual-entry input {
+  background: #fff;
+  border: 1px solid #ccc;
+  color: #000;
+}
+
+body.light .manual-entry input::placeholder {
+  color: #555;
 }
 
 .manual-entry .error {
@@ -395,6 +433,10 @@ body.light .dest-btn.active {
 
 .manual-entry button:hover:not(:disabled) {
   background: #444;
+}
+
+body.light .manual-entry button:hover:not(:disabled) {
+  background: #ddd;
 }
 
 .manual-entry button:disabled {
