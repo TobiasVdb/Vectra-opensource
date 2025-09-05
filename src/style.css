@@ -163,6 +163,10 @@ body.light .kp-pill {
   background: #262626;
 }
 
+body.light .dialog li:hover {
+  background: #eee;
+}
+
 .dialog li.near {
   border-left-color: #4caf50;
 }
@@ -218,6 +222,20 @@ body.light .kp-pill {
   font-size: 12px;
   margin-top: 2px;
   color: #fff;
+}
+
+body.light .dest-btn {
+  background: #fff;
+  color: #000;
+}
+
+body.light .dest-btn:hover {
+  background: #eee;
+}
+
+body.light .dest-btn.active {
+  background: #f7931e;
+  color: #000;
 }
 
 /* Flights panel */
