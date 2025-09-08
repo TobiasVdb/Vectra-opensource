@@ -460,6 +460,27 @@ body.light .manual-entry button:hover:not(:disabled) {
   font-size: 12px;
 }
 
+.manual-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  align-self: flex-start;
+}
+
+.manual-buttons .go-btn {
+  background: #f7931e;
+  color: #000;
+  font-weight: bold;
+}
+
+.manual-buttons .go-btn:hover:not(:disabled) {
+  background: #ffa94d;
+}
+
+.manual-buttons .remove-btn {
+  align-self: center;
+}
+
 .dialog h3 {
   margin-top: 0;
   color: #f7931e;

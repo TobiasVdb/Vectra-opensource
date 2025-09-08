@@ -1619,41 +1619,44 @@ export default function App(
                 </p>
               )}
             </div>
-            <button
-              onClick={() => {
-                const sLat = parseFloat(manualStartLat);
-                const sLng = parseFloat(manualStartLng);
-                const dLat = parseFloat(manualLat);
-                const dLng = parseFloat(manualLng);
-                if (
-                  !isNaN(sLat) &&
-                  !isNaN(sLng) &&
-                  !isNaN(dLat) &&
-                  !isNaN(dLng) &&
-                  !startLatError &&
-                  !startLngError &&
-                  !latError &&
-                  !lngError
-                ) {
-                  setManualRoute(sLat, sLng, dLat, dLng);
+            <div className="manual-buttons">
+              <button
+                className="go-btn"
+                onClick={() => {
+                  const sLat = parseFloat(manualStartLat);
+                  const sLng = parseFloat(manualStartLng);
+                  const dLat = parseFloat(manualLat);
+                  const dLng = parseFloat(manualLng);
+                  if (
+                    !isNaN(sLat) &&
+                    !isNaN(sLng) &&
+                    !isNaN(dLat) &&
+                    !isNaN(dLng) &&
+                    !startLatError &&
+                    !startLngError &&
+                    !latError &&
+                    !lngError
+                  ) {
+                    setManualRoute(sLat, sLng, dLat, dLng);
+                  }
+                }}
+                disabled={
+                  !!startLatError ||
+                  !!startLngError ||
+                  !!latError ||
+                  !!lngError ||
+                  manualStartLat === '' ||
+                  manualStartLng === '' ||
+                  manualLat === '' ||
+                  manualLng === ''
                 }
-              }}
-              disabled={
-                !!startLatError ||
-                !!startLngError ||
-                !!latError ||
-                !!lngError ||
-                manualStartLat === '' ||
-                manualStartLng === '' ||
-                manualLat === '' ||
-                manualLng === ''
-              }
-            >
-              Go
-            </button>
-            <button className="remove-btn" onClick={resetMission}>
-              Reset Mission
-            </button>
+              >
+                Go
+              </button>
+              <button className="remove-btn" onClick={resetMission}>
+                Reset Mission
+              </button>
+            </div>
           </div>
         </div>
       )}
