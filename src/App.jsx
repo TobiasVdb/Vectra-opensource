@@ -148,6 +148,13 @@ function calculateAvoidingPath(start, dest, zones = []) {
     return zones.some(z => pathIntersectsZone([a, b], z));
   }
 
+  // quick check for a direct straight path before running RRT
+  const straightPath = [start, dest];
+  const directIntersections = zones.filter(z => pathIntersectsZone(straightPath, z));
+  if (directIntersections.length === 0) {
+    return { path: straightPath, intersected: [], explored: [] };
+  }
+
   let minLng = Math.min(start[0], dest[0]);
   let minLat = Math.min(start[1], dest[1]);
   let maxLng = Math.max(start[0], dest[0]);
