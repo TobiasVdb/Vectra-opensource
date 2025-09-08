@@ -84,16 +84,6 @@ function formatZoneValue(val) {
   return JSON.stringify(val);
 }
 
-function formatTimeAgo(dateStr) {
-  const diffMs = Date.now() - new Date(dateStr).getTime();
-  const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
 function getZoneId(feature) {
   const props = feature?.properties || {};
   return (
@@ -165,14 +155,11 @@ export default function App(
     if ([startLat, startLng, destLat, destLng].some(n => isNaN(n))) return null;
     const distance = estimateActualDistance(flightPath);
     const distanceMeters = distance * 1000;
-    const avgWind = 2.06;
-    const gust = 3.06;
-    const windFrom = 0;
     const flight = getFlightGoNoGo(
       distanceMeters,
-      avgWind,
-      gust,
-      windFrom,
+      0,
+      0,
+      0,
       startLat,
       startLng,
       destLat,
@@ -185,7 +172,7 @@ export default function App(
       getEstimatedMissionTimeAtWhichDroneShouldReturnInMinutes(distanceMeters)
     );
     const distText = `${distance.toFixed(1)} km`;
-    return { flight, returnCapacity, returnTime, distText, avgWind, gust };
+    return { flight, returnCapacity, returnTime, distText };
   }, [flightPath, selected]);
 
   function handleManualStartLatChange(e) {
@@ -1288,51 +1275,6 @@ export default function App(
           </div>
 
           <div className="info-group">
-            <div className="info-row">
-              <span className="label">Mission</span>
-              <span className="value">{selected.mission_name}</span>
-            </div>
-            <div className="info-row">
-              <span className="label">Status</span>
-              <span className="value">{selected.status}</span>
-            </div>
-            <div className="info-row">
-              <span className="label">Zone</span>
-              <span className="value">{selected.zone}</span>
-            </div>
-            <div className="info-row">
-              <span className="label">Customer</span>
-              <span className="value">{selected.customer}</span>
-            </div>
-            <div className="info-row">
-              <span className="label">Created</span>
-              <span className="value">{formatTimeAgo(selected.createdDateTime)}</span>
-            </div>
-          </div>
-
-          <div className="info-group">
-            <div className="info-row">
-              <span className="label">Wind</span>
-              <span className={`value ${flightInfo.flight.windAtCruiseAltCheck ? 'ok' : 'no'}`}>
-                {flightInfo.flight.windAtCruiseAltCheck ? (
-                  <SealCheck size={16} weight="fill" />
-                ) : (
-                  <SealWarning size={16} weight="fill" />
-                )}
-                {flightInfo.avgWind.toFixed(2)} m/s
-              </span>
-            </div>
-            <div className="info-row">
-              <span className="label">Gust</span>
-              <span className={`value ${flightInfo.flight.maxGustAtCruiseAltCheck ? 'ok' : 'no'}`}>
-                {flightInfo.flight.maxGustAtCruiseAltCheck ? (
-                  <SealCheck size={16} weight="fill" />
-                ) : (
-                  <SealWarning size={16} weight="fill" />
-                )}
-                {flightInfo.gust.toFixed(2)} m/s
-              </span>
-            </div>
             <div className="info-row">
               <span className="label">Outbound speed</span>
               <span className={`value ${flightInfo.flight.outboundGroundSpeedCheck ? 'ok' : 'no'}`}>
