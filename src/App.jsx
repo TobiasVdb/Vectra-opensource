@@ -324,8 +324,11 @@ export default function App(
   }
 
   function resetMission() {
+    // Clear any active mission and remove associated map overlays
     setSelected(null);
     setFlightPath([]);
+    clearStart();
+    clearDestination();
     const map = mapRef.current;
     if (map) {
       if (map.getLayer('flight')) map.removeLayer('flight');
