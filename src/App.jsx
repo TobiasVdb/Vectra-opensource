@@ -10,7 +10,9 @@ import {
   SealCheck,
   SealWarning,
   ChatCenteredText,
-  Airplane
+  Airplane,
+  Eye,
+  EyeSlash
 } from '@phosphor-icons/react';
 import FeedbackDialog from './FeedbackDialog';
 import { isZoneActive } from './fetchActiveGeozones.js';
@@ -1535,7 +1537,7 @@ export default function App(
         </div>
       )}
       {showLayers && (
-        <div className="dialog glass-effect">
+        <div className="dialog glass-effect layers-overlay">
           <h3>Layers</h3>
           <ul>
             {layers.map(l => (
@@ -1544,7 +1546,14 @@ export default function App(
                   className={`dest-btn${selectedLayerId === l.id ? ' active' : ''}`}
                   onClick={() => toggleLayer(l.id)}
                 >
-                  {l.name || l.title || `Layer ${l.id}`}
+                  {selectedLayerId === l.id ? (
+                    <Eye size={16} />
+                  ) : (
+                    <EyeSlash size={16} />
+                  )}
+                  <span className="layer-name">
+                    {l.name || l.title || `Layer ${l.id}`}
+                  </span>
                 </button>
               </li>
             ))}
