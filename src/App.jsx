@@ -690,7 +690,10 @@ export default function App(
       try {
         const res = await fetch('https://vectrabackyard-3dmb6.ondigitalocean.app/layers');
         const data = await res.json();
-        setLayers(data);
+        const sorted = [...data].sort((a, b) =>
+          (a.name || a.title || '').localeCompare(b.name || b.title || '')
+        );
+        setLayers(sorted);
       } catch (e) {
         console.error('Failed to load layers', e);
       }
