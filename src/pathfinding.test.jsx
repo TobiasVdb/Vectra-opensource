@@ -1,70 +1,6 @@
-import { vi, describe, test, expect } from 'vitest';
-import { calculateAvoidingPath, pathIntersectsZone } from './App.jsx';
+import { describe, test, expect } from 'vitest';
 
-vi.mock('mapbox-gl', () => {
-  class Map {
-    constructor() {
-      this.doubleClickZoom = { disable() {} };
-    }
-    on() {}
-    remove() {}
-    getSource() {
-      return { setData() {} };
-    }
-    addSource() {}
-    addLayer() {}
-    fitBounds() {}
-    stop() {}
-    getStyle() {
-      return { layers: [] };
-    }
-    setTerrain() {}
-    removeLayer() {}
-    removeSource() {}
-    easeTo() {}
-    getCanvas() {
-      return { style: {} };
-    }
-    isStyleLoaded() {
-      return true;
-    }
-    getCenter() {
-      return { lng: 0, lat: 0 };
-    }
-    getZoom() {
-      return 0;
-    }
-    queryRenderedFeatures() {
-      return [];
-    }
-    off() {}
-  }
-  class Popup {
-    setLngLat() {
-      return this;
-    }
-    addTo() {
-      return this;
-    }
-    addClassName() {
-      return this;
-    }
-    setHTML() {
-      return this;
-    }
-    remove() {}
-  }
-  class Marker {
-    setLngLat() {
-      return this;
-    }
-    addTo() {
-      return this;
-    }
-    remove() {}
-  }
-  return { Map, Popup, Marker, default: { Map, Popup, Marker } };
-});
+import { calculateAvoidingPath, pathIntersectsZone } from './pathfinding.js';
 
 describe('pathIntersectsZone', () => {
   const polygon = {
@@ -142,5 +78,30 @@ describe('calculateAvoidingPath', () => {
     const { path } = calculateAvoidingPath(start, dest, [multipolygon]);
     expect(path.length).toBeGreaterThan(2);
     expect(pathIntersectsZone(path, multipolygon)).toBe(false);
+  });
+
+  test('handles adjacent zones with segment starting on a boundary', () => {
+    const zone1 = {
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[[0, 0],[0, 0.01],[0.01, 0.01],[0.01, 0],[0, 0]]]
+      }
+    };
+    const zone2 = {
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[[0.01, 0],[0.01, 0.01],[0.02, 0.01],[0.02, 0],[0.01, 0]]]
+      }
+    };
+    const start = [-0.005, 0.005];
+    const dest = [0.025, 0.005];
+
+    const { path } = calculateAvoidingPath(start, dest, [zone1, zone2]);
+    expect(pathIntersectsZone(path, zone1)).toBe(false);
+    expect(pathIntersectsZone(path, zone2)).toBe(false);
   });
 });
