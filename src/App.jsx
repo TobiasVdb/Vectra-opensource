@@ -20,8 +20,11 @@ import {
   bbox,
   point,
   booleanPointInPolygon,
-  distance,
-  polygonToLine
+  polygonToLine,
+  length,
+  flattenEach,
+  nearestPointOnLine,
+  centroid
 } from '@turf/turf';
 import {
   estimateActualDistance,
@@ -139,107 +142,71 @@ export function pathIntersectsZone(path, zone) {
     geom.type === 'Polygon' || geom.type === 'MultiPolygon' ? geom : null;
   if (!poly) return false;
   const line = lineString(path);
-  if (lineIntersect(line, polygonToLine(poly)).features.length > 0) return true;
+  const intersections = lineIntersect(line, polygonToLine(poly)).features;
+  const filtered = intersections.filter(f => {
+    const [x, y] = f.geometry.coordinates;
+    return !path.some(p => Math.abs(p[0] - x) < 1e-9 && Math.abs(p[1] - y) < 1e-9);
+  });
+  if (filtered.length > 0) return true;
   return path.some(c => booleanPointInPolygon(point(c), poly));
 }
 
+function findSegmentIndex(ring, pt) {
+  return nearestPointOnLine(lineString(ring), point(pt)).properties.index;
+}
+
+function buildPath(ring, startIdx, endIdx, direction) {
+  const res = [];
+  const len = ring.length - 1;
+  let idx = startIdx;
+  while (idx !== endIdx) {
+    idx = (idx + direction + len) % len;
+    res.push(ring[idx]);
+  }
+  return res;
+}
+
 export function calculateAvoidingPath(start, dest, zones = []) {
-  function segmentIntersects(a, b) {
-    return zones.some(z => pathIntersectsZone([a, b], z));
-  }
+  let path = [start, dest];
 
-  // quick check for a direct straight path before running RRT
-  const straightPath = [start, dest];
-  const directIntersections = zones.filter(z => pathIntersectsZone(straightPath, z));
-  if (directIntersections.length === 0) {
-    return { path: straightPath, intersected: [], explored: [] };
-  }
-
-  let minLng = Math.min(start[0], dest[0]);
-  let minLat = Math.min(start[1], dest[1]);
-  let maxLng = Math.max(start[0], dest[0]);
-  let maxLat = Math.max(start[1], dest[1]);
-  zones.forEach(z => {
-    const b = bbox(z);
-    minLng = Math.min(minLng, b[0]);
-    minLat = Math.min(minLat, b[1]);
-    maxLng = Math.max(maxLng, b[2]);
-    maxLat = Math.max(maxLat, b[3]);
+  zones.forEach(zone => {
+    flattenEach(zone, poly => {
+      const ring = poly.geometry.coordinates[0];
+      const center = centroid(poly).geometry.coordinates;
+      const nudge = pt => {
+        const dx = pt[0] - center[0];
+        const dy = pt[1] - center[1];
+        const len = Math.sqrt(dx * dx + dy * dy) || 1;
+        const off = 1e-6;
+        return [pt[0] + (dx / len) * off, pt[1] + (dy / len) * off];
+      };
+      let i = 0;
+      while (i < path.length - 1) {
+        const a = path[i];
+        const b = path[i + 1];
+        const line = lineString([a, b]);
+        const ints = lineIntersect(line, polygonToLine(poly)).features;
+        if (ints.length >= 2) {
+          const p1 = ints[0].geometry.coordinates;
+          const p2 = ints[ints.length - 1].geometry.coordinates;
+          const sIdx = findSegmentIndex(ring, p1);
+          const eIdx = findSegmentIndex(ring, p2);
+          const cw = [p1, ...buildPath(ring, sIdx, eIdx, 1), p2].map(nudge);
+          const ccw = [p1, ...buildPath(ring, sIdx, eIdx, -1), p2].map(nudge);
+          const cwLen = length(lineString(cw));
+          const ccwLen = length(lineString(ccw));
+          const detour = cwLen < ccwLen ? cw : ccw;
+          path.splice(i + 1, 1, ...detour, b);
+          i += detour.length;
+        } else {
+          i++;
+        }
+      }
+    });
   });
-  const marginLng = (maxLng - minLng) * 0.1;
-  const marginLat = (maxLat - minLat) * 0.1;
-  minLng -= marginLng;
-  maxLng += marginLng;
-  minLat -= marginLat;
-  maxLat += marginLat;
 
-  const stepMeters = 200;
-  const stepKm = stepMeters / 1000;
-  const stepDeg = stepMeters / 111320;
-  const maxIterations = 2000;
-  const nodes = [{ point: start, parent: null }];
-  const explored = [];
-
-  for (let iter = 0; iter < maxIterations; iter++) {
-    const target =
-      iter % 5 === 0
-        ? dest
-        : [
-            minLng + Math.random() * (maxLng - minLng),
-            minLat + Math.random() * (maxLat - minLat)
-          ];
-
-    let nearestIndex = 0;
-    let nearestDist = Infinity;
-    for (let i = 0; i < nodes.length; i++) {
-      const d = distance(point(nodes[i].point), point(target));
-      if (d < nearestDist) {
-        nearestDist = d;
-        nearestIndex = i;
-      }
-    }
-    const nearest = nodes[nearestIndex];
-    const angle = Math.atan2(
-      target[1] - nearest.point[1],
-      target[0] - nearest.point[0]
-    );
-    const newPoint = [
-      nearest.point[0] + stepDeg * Math.cos(angle),
-      nearest.point[1] + stepDeg * Math.sin(angle)
-    ];
-
-    if (
-      newPoint[0] < minLng ||
-      newPoint[0] > maxLng ||
-      newPoint[1] < minLat ||
-      newPoint[1] > maxLat
-    )
-      continue;
-    if (segmentIntersects(nearest.point, newPoint)) continue;
-
-    nodes.push({ point: newPoint, parent: nearestIndex });
-    explored.push([nearest.point, newPoint]);
-
-    if (
-      distance(point(newPoint), point(dest)) < stepKm &&
-      !segmentIntersects(newPoint, dest)
-    ) {
-      const path = [];
-      let idx = nodes.length - 1;
-      while (idx !== null) {
-        path.push(nodes[idx].point);
-        idx = nodes[idx].parent;
-      }
-      path.reverse();
-      path.push(dest);
-      const intersected = zones.filter(z => pathIntersectsZone(path, z));
-      return { path, intersected, explored };
-    }
-  }
-
-  const fallback = [start, dest];
-  const intersected = zones.filter(z => pathIntersectsZone(fallback, z));
-  return { path: fallback, intersected, explored };
+  const intersected = zones.filter(z => pathIntersectsZone(path, z));
+  return { path, intersected, explored: [] };
 }
 
 export default function App(
