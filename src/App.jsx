@@ -491,6 +491,7 @@ export default function App(
       setMapLoaded(true);
       applyMapMode(mapMode);
       mapRef.current.doubleClickZoom.disable();
+      mapRef.current.dragRotate && mapRef.current.dragRotate.disable();
     });
   }, [mapStyleIndex]);
 
