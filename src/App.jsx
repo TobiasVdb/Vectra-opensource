@@ -242,15 +242,23 @@ function calculateAvoidingPath(start, dest, zones = []) {
   return { path: fallback, intersected, explored };
 }
 
-export default function App() {
+export default function App(
+  {
+    initialRouteNoFlyZones = [],
+    initialLayerFeatures = {},
+    initialSelected = null,
+    initialFlightPath = [],
+    disableFocus = false
+  } = {}
+) {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
   const noFlyHandlersRef = useRef({});
   const nfzPopupRef = useRef(null);
-  const layerFeaturesRef = useRef({});
+  const layerFeaturesRef = useRef(initialLayerFeatures);
   const startMarkerRef = useRef(null);
   const destMarkerRef = useRef(null);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(initialSelected);
   const [showDialog, setShowDialog] = useState(true);
   const [manualStartLat, setManualStartLat] = useState('');
   const [manualStartLng, setManualStartLng] = useState('');
@@ -260,7 +268,7 @@ export default function App() {
   const [startLngError, setStartLngError] = useState('');
   const [latError, setLatError] = useState('');
   const [lngError, setLngError] = useState('');
-  const [flightPath, setFlightPath] = useState([]);
+  const [flightPath, setFlightPath] = useState(initialFlightPath);
 
   const flightInfo = useMemo(() => {
     if (flightPath.length < 2 || !selected) return null;
@@ -370,7 +378,9 @@ export default function App() {
   const [selectedLayerId, setSelectedLayerId] = useState(null);
   const initialLayerIdRef = useRef(null);
   const [layerFeatures, setLayerFeatures] = useState([]);
-  const [routeNoFlyZones, setRouteNoFlyZones] = useState([]);
+  const [routeNoFlyZones, setRouteNoFlyZones] = useState(
+    initialRouteNoFlyZones
+  );
   const [clearedZoneIds, setClearedZoneIds] = useState([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showWeather, setShowWeather] = useState(false);
@@ -830,7 +840,7 @@ export default function App() {
     setRouteNoFlyZones(zones => zones.filter(z => getZoneId(z) !== id));
     const newCleared = [...clearedZoneIds, id];
     setClearedZoneIds(newCleared);
-    if (selected) {
+    if (selected && !disableFocus) {
       focusDestination(selected, newCleared);
     }
   }
@@ -1236,8 +1246,14 @@ export default function App() {
               ? `<div class="nfz-popup-nav"><button id="nfz-prev">Prev</button><span>${idx + 1} / ${features.length}</span><button id="nfz-next">Next</button></div>`
               : '';
           popup.setHTML(
-            `<div class="nfz-popup-content">${nav}<table>${rows}</table></div>`
+            `<div class="nfz-popup-content">${nav}<table>${rows}</table><button id="nfz-clear">Clear for this flight</button></div>`
           );
+          const clear = document.getElementById('nfz-clear');
+          clear?.addEventListener('click', () => {
+            handleClearZone(features[idx]);
+            popup.remove();
+            nfzPopupRef.current = null;
+          });
           if (features.length > 1) {
             const prev = document.getElementById('nfz-prev');
             const next = document.getElementById('nfz-next');
