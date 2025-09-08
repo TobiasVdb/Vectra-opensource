@@ -797,3 +797,34 @@ body.light .nfz-popup-nav button {
   border-radius: 4px;
   cursor: pointer;
 }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.layers-overlay {
+  animation: fadeInUp 0.3s ease;
+}
+
+.layers-overlay ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.layers-overlay button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.layers-overlay .layer-name {
+  flex: 1;
+}
