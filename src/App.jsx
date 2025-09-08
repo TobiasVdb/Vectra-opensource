@@ -131,19 +131,19 @@ function generateHoverCircle(center, radiusMeters = 50, points = 60) {
 
 }
 
-function calculateAvoidingPath(start, dest, zones = []) {
-  // Helper that checks whether a path intersects a given zone
-  function pathIntersectsZone(path, zone) {
-    const geom = zone.geometry;
-    if (!geom) return false;
-    const poly =
-      geom.type === 'Polygon' || geom.type === 'MultiPolygon' ? geom : null;
-    if (!poly) return false;
-    const line = lineString(path);
-    if (lineIntersect(line, polygonToLine(poly)).features.length > 0) return true;
-    return path.some(c => booleanPointInPolygon(point(c), poly));
-  }
+// Helper that checks whether a path intersects a given zone
+export function pathIntersectsZone(path, zone) {
+  const geom = zone.geometry;
+  if (!geom) return false;
+  const poly =
+    geom.type === 'Polygon' || geom.type === 'MultiPolygon' ? geom : null;
+  if (!poly) return false;
+  const line = lineString(path);
+  if (lineIntersect(line, polygonToLine(poly)).features.length > 0) return true;
+  return path.some(c => booleanPointInPolygon(point(c), poly));
+}
 
+export function calculateAvoidingPath(start, dest, zones = []) {
   function segmentIntersects(a, b) {
     return zones.some(z => pathIntersectsZone([a, b], z));
   }
