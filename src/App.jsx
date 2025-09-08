@@ -348,6 +348,18 @@ export default function App() {
     setManualLng('');
   }
 
+  function resetMission() {
+    setSelected(null);
+    setFlightPath([]);
+    const map = mapRef.current;
+    if (map) {
+      if (map.getLayer('flight')) map.removeLayer('flight');
+      if (map.getSource('flight')) map.removeSource('flight');
+      if (map.getLayer('flight-trials')) map.removeLayer('flight-trials');
+      if (map.getSource('flight-trials')) map.removeSource('flight-trials');
+    }
+  }
+
   const [kpData, setKpData] = useState(null);
   const [showKp, setShowKp] = useState(false);
   // map display mode: '2d', '3d', or '3e' (3D with terrain elevation); default '2d'
@@ -363,6 +375,49 @@ export default function App() {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showWeather, setShowWeather] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+
+  useEffect(() => {
+    if (selected?.mission_name !== 'Manual') return;
+
+    const sLat = parseFloat(manualStartLat);
+    const sLng = parseFloat(manualStartLng);
+    const dLat = parseFloat(manualLat);
+    const dLng = parseFloat(manualLng);
+
+    const valid =
+      manualStartLat !== '' &&
+      manualStartLng !== '' &&
+      manualLat !== '' &&
+      manualLng !== '' &&
+      ![sLat, sLng, dLat, dLng].some(n => isNaN(n)) &&
+      !startLatError &&
+      !startLngError &&
+      !latError &&
+      !lngError;
+
+    if (valid) {
+      const matches =
+        Number(selected.startLatitude) === sLat &&
+        Number(selected.startLongitude) === sLng &&
+        Number(selected.latitude) === dLat &&
+        Number(selected.longitude) === dLng;
+      if (!matches) {
+        setManualRoute(sLat, sLng, dLat, dLng);
+      }
+    } else {
+      resetMission();
+    }
+  }, [
+    manualStartLat,
+    manualStartLng,
+    manualLat,
+    manualLng,
+    startLatError,
+    startLngError,
+    latError,
+    lngError,
+    selected
+  ]);
 
   useEffect(() => {
     try {
@@ -1608,6 +1663,9 @@ export default function App() {
               }
             >
               Go
+            </button>
+            <button className="remove-btn" onClick={resetMission}>
+              Reset Mission
             </button>
           </div>
         </div>
