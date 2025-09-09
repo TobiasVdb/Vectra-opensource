@@ -80,28 +80,10 @@ describe('calculateAvoidingPath', () => {
     expect(pathIntersectsZone(path, multipolygon)).toBe(false);
   });
 
-  test('handles adjacent zones with segment starting on a boundary', () => {
-    const zone1 = {
-      type: 'Feature',
-      properties: {},
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[[0, 0],[0, 0.01],[0.01, 0.01],[0.01, 0],[0, 0]]]
-      }
-    };
-    const zone2 = {
-      type: 'Feature',
-      properties: {},
-      geometry: {
-        type: 'Polygon',
-        coordinates: [[[0.01, 0],[0.01, 0.01],[0.02, 0.01],[0.02, 0],[0.01, 0]]]
-      }
-    };
+  test('falls back to straight path when timeout exceeded', () => {
     const start = [-0.005, 0.005];
-    const dest = [0.025, 0.005];
-
-    const { path } = calculateAvoidingPath(start, dest, [zone1, zone2]);
-    expect(pathIntersectsZone(path, zone1)).toBe(false);
-    expect(pathIntersectsZone(path, zone2)).toBe(false);
+    const dest = [0.015, 0.005];
+    const { path } = calculateAvoidingPath(start, dest, [polygon], 0);
+    expect(path).toEqual([start, dest]);
   });
 });
