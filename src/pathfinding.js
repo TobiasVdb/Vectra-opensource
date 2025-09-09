@@ -31,16 +31,36 @@ function buildPath(ring, startIdx, endIdx, direction) {
   return res;
 }
 
-export function calculateAvoidingPath(start, dest, zones = []) {
+export function calculateAvoidingPath(start, dest, zones = [], timeoutMs = 4000) {
+  const startTime = Date.now();
+  let timedOut = false;
+
+  const fallback = () => {
+    const fallbackPath = [start, dest];
+    const intersected = zones.filter(z => pathIntersectsZone(fallbackPath, z));
+    return { path: fallbackPath, intersected, explored: [] };
+  };
+
+  const checkTimeout = () => {
+    if (Date.now() - startTime >= timeoutMs) {
+      timedOut = true;
+      return true;
+    }
+    return false;
+  };
+
   let path = [start, dest];
   const maxIterations = 5;
   let iter = 0;
 
-  while (iter < maxIterations) {
+  while (iter < maxIterations && !timedOut) {
+    if (checkTimeout()) break;
     let changed = false;
 
-    zones.forEach(zone => {
+    for (const zone of zones) {
+      if (checkTimeout()) break;
       flattenEach(zone, poly => {
+        if (timedOut) return;
         const ring = poly.geometry.coordinates[0];
         const center = centroid(poly).geometry.coordinates;
         const nudge = pt => {
@@ -52,7 +72,8 @@ export function calculateAvoidingPath(start, dest, zones = []) {
         };
 
         let i = 0;
-        while (i < path.length - 1) {
+        while (i < path.length - 1 && !timedOut) {
+          if (checkTimeout()) break;
           const a = path[i];
           const b = path[i + 1];
           const line = lineString([a, b]);
@@ -79,10 +100,15 @@ export function calculateAvoidingPath(start, dest, zones = []) {
           }
         }
       });
-    });
+      if (timedOut) break;
+    }
 
-    if (!changed) break;
+    if (!changed || timedOut) break;
     iter++;
+  }
+
+  if (timedOut) {
+    return fallback();
   }
 
   const intersected = zones.filter(z => pathIntersectsZone(path, z));
