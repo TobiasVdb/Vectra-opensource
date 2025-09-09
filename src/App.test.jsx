@@ -99,3 +99,26 @@ test('clearing a zone removes it from route', () => {
   expect(screen.queryByText('No Fly Zones')).toBeNull();
 });
 
+test('shows direct and avoiding distances', () => {
+  const selected = {
+    startLatitude: 0,
+    startLongitude: 0,
+    latitude: 1,
+    longitude: 1,
+  };
+  const path = [
+    [0, 0],
+    [0.5, 0.5],
+    [1, 1],
+  ];
+  render(
+    <App
+      initialSelected={selected}
+      initialFlightPath={path}
+      disableFocus={true}
+    />
+  );
+  expect(screen.getAllByText('Direct distance')[0]).toBeInTheDocument();
+  expect(screen.getAllByText('Avoiding distance')[0]).toBeInTheDocument();
+});
+

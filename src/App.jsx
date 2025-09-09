@@ -17,14 +17,15 @@ import {
 import FeedbackDialog from './FeedbackDialog';
 import { isZoneActive } from './fetchActiveGeozones.js';
 import { bbox } from '@turf/turf';
-import { calculateAvoidingPath } from './pathfinding.js';
+import { calculateAvoidingPath, pathIntersectsZone } from './pathfinding.js';
 export { pathIntersectsZone } from './pathfinding.js';
 import {
   estimateActualDistance,
   getFlightGoNoGo,
   decimalMinutesToTime,
   getEstimatedMissionTimeAtWhichDroneShouldReturnInMinutes,
-  getEstimatedCurrentCapacityConsumedAtWhichDroneShouldReturn
+  getEstimatedCurrentCapacityConsumedAtWhichDroneShouldReturn,
+  getDistanceMeters
 } from './utils.js';
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoic25pbGxvY21vdCIsImEiOiJjbThxY2U2MmIwYWE2MmtzOHhyNjdqMjZnIn0.3b-7Y5j4Uxy5kNCqcLaaYw';
@@ -153,8 +154,8 @@ export default function App(
     const destLat = parseFloat(selected.latitude);
     const destLng = parseFloat(selected.longitude);
     if ([startLat, startLng, destLat, destLng].some(n => isNaN(n))) return null;
-    const distance = estimateActualDistance(flightPath);
-    const distanceMeters = distance * 1000;
+    const avoidDistance = estimateActualDistance(flightPath);
+    const distanceMeters = avoidDistance * 1000;
     const flight = getFlightGoNoGo(
       distanceMeters,
       0,
@@ -171,8 +172,17 @@ export default function App(
     const returnTime = decimalMinutesToTime(
       getEstimatedMissionTimeAtWhichDroneShouldReturnInMinutes(distanceMeters)
     );
-    const distText = `${distance.toFixed(1)} km`;
-    return { flight, returnCapacity, returnTime, distText };
+    const directDistance =
+      getDistanceMeters(startLat, startLng, destLat, destLng) / 1000;
+    const directDistText = `${directDistance.toFixed(1)} km`;
+    const avoidDistText = `${avoidDistance.toFixed(1)} km`;
+    return {
+      flight,
+      returnCapacity,
+      returnTime,
+      directDistText,
+      avoidDistText,
+    };
   }, [flightPath, selected]);
 
   function handleManualStartLatChange(e) {
@@ -621,7 +631,15 @@ export default function App(
         destCoord,
         features
       );
-      setRouteNoFlyZones(intersected);
+      const directPath = [startCoord, destCoord];
+      const directIntersected = features.filter(z =>
+        pathIntersectsZone(directPath, z)
+      );
+      const combined = [...intersected, ...directIntersected].filter(
+        (z, i, arr) =>
+          arr.findIndex(o => getZoneId(o) === getZoneId(z)) === i
+      );
+      setRouteNoFlyZones(combined);
       setFlightPath(path);
 
       const trialFeatures = explored.map(coords => ({
@@ -1298,14 +1316,18 @@ export default function App(
               </span>
             </div>
             <div className="info-row">
-              <span className="label">Distance</span>
+              <span className="label">Direct distance</span>
+              <span className="value">{flightInfo.directDistText}</span>
+            </div>
+            <div className="info-row">
+              <span className="label">Avoiding distance</span>
               <span className={`value ${flightInfo.flight.outboundCapacityCheck ? 'ok' : 'no'}`}>
                 {flightInfo.flight.outboundCapacityCheck ? (
                   <SealCheck size={16} weight="fill" />
                 ) : (
                   <SealWarning size={16} weight="fill" />
                 )}
-                {flightInfo.distText}
+                {flightInfo.avoidDistText}
               </span>
             </div>
             <div className="info-row">
@@ -1357,6 +1379,10 @@ export default function App(
           {routeNoFlyZones.length > 0 && (
             <div className="nfz-clearance">
               <h4>No Fly Zones</h4>
+              <p>
+                These zones are non-blocking and can be cleared for this flight;
+                a direct route would be shorter.
+              </p>
               {routeNoFlyZones.map(z => {
                 const id = getZoneId(z);
                 const name = z.properties?.name || z.properties?.id || 'Unnamed';
