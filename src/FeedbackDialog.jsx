@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 export default function FeedbackDialog({ onClose }) {
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -26,29 +27,43 @@ export default function FeedbackDialog({ onClose }) {
     } catch (err) {
       console.error('Failed to send feedback', err, payload);
     }
-    onClose();
+    setSubmitted(true);
+    setTimeout(onClose, 2000);
   }
 
   return (
     <div className="feedback-overlay">
-      <form className="feedback-form glass-effect" onSubmit={handleSubmit}>
-        <h2>Feedback</h2>
-        <textarea
-          placeholder="Your feedback"
-          value={message}
-          onChange={e => setMessage(e.target.value)}
-        />
-        <input
-          type="email"
-          placeholder="Email (optional)"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-        />
-        <div className="feedback-actions">
-          <button type="submit" disabled={!message.trim()}>Submit</button>
-          <button type="button" onClick={onClose}>Cancel</button>
+      {submitted ? (
+        <div className="feedback-form glass-effect">
+          <div className="feedback-success">
+            <div className="checkmark">
+              <svg viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <p>Thank you for your feedback!</p>
+          </div>
         </div>
-      </form>
+      ) : (
+        <form className="feedback-form glass-effect" onSubmit={handleSubmit}>
+          <h2>Feedback</h2>
+          <textarea
+            placeholder="Your feedback"
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+          />
+          <input
+            type="email"
+            placeholder="Email (optional)"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+          />
+          <div className="feedback-actions">
+            <button type="submit" disabled={!message.trim()}>Submit</button>
+            <button type="button" onClick={onClose}>Cancel</button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
