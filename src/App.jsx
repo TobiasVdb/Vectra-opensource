@@ -1319,17 +1319,19 @@ export default function App(
               <span className="label">Direct distance</span>
               <span className="value">{flightInfo.directDistText}</span>
             </div>
-            <div className="info-row">
-              <span className="label">Avoiding distance</span>
-              <span className={`value ${flightInfo.flight.outboundCapacityCheck ? 'ok' : 'no'}`}>
-                {flightInfo.flight.outboundCapacityCheck ? (
-                  <SealCheck size={16} weight="fill" />
-                ) : (
-                  <SealWarning size={16} weight="fill" />
-                )}
-                {flightInfo.avoidDistText}
-              </span>
-            </div>
+            {routeNoFlyZones.length > 0 && (
+              <div className="info-row">
+                <span className="label">Avoiding distance</span>
+                <span className={`value ${flightInfo.flight.outboundCapacityCheck ? 'ok' : 'no'}`}>
+                  {flightInfo.flight.outboundCapacityCheck ? (
+                    <SealCheck size={16} weight="fill" />
+                  ) : (
+                    <SealWarning size={16} weight="fill" />
+                  )}
+                  {flightInfo.avoidDistText}
+                </span>
+              </div>
+            )}
             <div className="info-row">
               <span className="label">Return Capacity</span>
               <span className={`value ${flightInfo.flight.returnCapacityCheck ? 'ok' : 'no'}`}>

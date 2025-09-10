@@ -99,7 +99,34 @@ test('clearing a zone removes it from route', () => {
   expect(screen.queryByText('No Fly Zones')).toBeNull();
 });
 
-test('shows direct and avoiding distances', () => {
+test('hides avoiding distance when there are no no-fly zones', () => {
+  const selected = {
+    startLatitude: 0,
+    startLongitude: 0,
+    latitude: 1,
+    longitude: 1,
+  };
+  const path = [
+    [0, 0],
+    [1, 1],
+  ];
+  render(
+    <App
+      initialSelected={selected}
+      initialFlightPath={path}
+      disableFocus={true}
+    />
+  );
+  expect(screen.getAllByText('Direct distance')[0]).toBeInTheDocument();
+  expect(screen.queryByText('Avoiding distance')).toBeNull();
+});
+
+test('shows avoiding distance when there is a no-fly zone', () => {
+  const zone = {
+    type: 'Feature',
+    properties: { id: 'zone-1', name: 'Test Zone' },
+    geometry: { type: 'Polygon', coordinates: [[[0, 0],[0, 1],[1, 1],[1, 0],[0, 0]]] }
+  };
   const selected = {
     startLatitude: 0,
     startLongitude: 0,
@@ -115,6 +142,7 @@ test('shows direct and avoiding distances', () => {
     <App
       initialSelected={selected}
       initialFlightPath={path}
+      initialRouteNoFlyZones={[zone]}
       disableFocus={true}
     />
   );
