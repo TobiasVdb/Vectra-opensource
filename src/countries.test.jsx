@@ -48,9 +48,9 @@ vi.mock('mapbox-gl', () => {
   return { Map, Popup, Marker, default: { Map, Popup, Marker } };
 });
 
-test('countries are sorted by name', async () => {
+test('layers are sorted by name', async () => {
   const fetchMock = vi.fn(url => {
-    if (url.endsWith('/countries')) {
+    if (url.endsWith('/layers')) {
       return Promise.resolve({
         json: () => Promise.resolve([
           { id: 1, name: 'Bravo' },
@@ -76,7 +76,7 @@ test('countries are sorted by name', async () => {
   const countriesBtn = await screen.findByLabelText('Countries/No Fly Zones');
   await waitFor(() =>
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://vectrabackyard-3dmb6.ondigitalocean.app/countries'
+      'https://vectrabackyard-3dmb6.ondigitalocean.app/layers'
     )
   );
   fireEvent.click(countriesBtn);
