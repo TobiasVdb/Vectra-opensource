@@ -48,9 +48,9 @@ vi.mock('mapbox-gl', () => {
   return { Map, Popup, Marker, default: { Map, Popup, Marker } };
 });
 
-test('layers are sorted by name', async () => {
+test('countries are sorted by name', async () => {
   const fetchMock = vi.fn(url => {
-    if (url.endsWith('/layers')) {
+    if (url.endsWith('/countries')) {
       return Promise.resolve({
         json: () => Promise.resolve([
           { id: 1, name: 'Bravo' },
@@ -73,14 +73,14 @@ test('layers are sorted by name', async () => {
   global.fetch = fetchMock;
 
   render(<App />);
-  const layersBtn = await screen.findByLabelText('Layers/No Fly Zones');
+  const countriesBtn = await screen.findByLabelText('Countries/No Fly Zones');
   await waitFor(() =>
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://vectrabackyard-3dmb6.ondigitalocean.app/layers'
+      'https://vectrabackyard-3dmb6.ondigitalocean.app/countries'
     )
   );
-  fireEvent.click(layersBtn);
-  const dialog = screen.getByText('Layers').parentElement;
+  fireEvent.click(countriesBtn);
+  const dialog = screen.getByText('Countries').parentElement;
   const buttons = within(dialog).getAllByRole('button');
   expect(buttons.map(b => b.textContent)).toEqual(['Alpha', 'Bravo']);
 });

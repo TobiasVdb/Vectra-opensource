@@ -122,7 +122,7 @@ function generateHoverCircle(center, radiusMeters = 50, points = 60) {
 export default function App(
   {
     initialRouteNoFlyZones = [],
-    initialLayerFeatures = {},
+    initialCountryFeatures = {},
     initialSelected = null,
     initialFlightPath = [],
     disableFocus = false
@@ -132,7 +132,7 @@ export default function App(
   const mapRef = useRef(null);
   const noFlyHandlersRef = useRef({});
   const nfzPopupRef = useRef(null);
-  const layerFeaturesRef = useRef(initialLayerFeatures);
+  const countryFeaturesRef = useRef(initialCountryFeatures);
   const startMarkerRef = useRef(null);
   const destMarkerRef = useRef(null);
   const [selected, setSelected] = useState(initialSelected);
@@ -259,11 +259,11 @@ export default function App(
   // map display mode: '2d', '3d', or '3e' (3D with terrain elevation); default '2d'
   const [mapMode, setMapMode] = useState('2d');
   const [mapStyleIndex, setMapStyleIndex] = useState(0);
-  const [layers, setLayers] = useState([]);
-  const [showLayers, setShowLayers] = useState(false);
-  const [selectedLayerId, setSelectedLayerId] = useState(null);
-  const initialLayerIdRef = useRef(null);
-  const [layerFeatures, setLayerFeatures] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [showCountries, setShowCountries] = useState(false);
+  const [selectedCountryId, setSelectedCountryId] = useState(null);
+  const initialCountryIdRef = useRef(null);
+  const [countryFeatures, setCountryFeatures] = useState([]);
   const [routeNoFlyZones, setRouteNoFlyZones] = useState(
     initialRouteNoFlyZones
   );
@@ -347,28 +347,28 @@ export default function App(
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('selectedLayerId');
+      const saved = localStorage.getItem('selectedCountryId');
       if (saved) {
-        initialLayerIdRef.current = saved;
+        initialCountryIdRef.current = saved;
       }
     } catch (e) {
-      console.error('Failed to read saved layer id', e);
+      console.error('Failed to read saved country id', e);
     }
   }, []);
 
   useEffect(() => {
-    if (selectedLayerId) {
-      localStorage.setItem('selectedLayerId', selectedLayerId);
+    if (selectedCountryId) {
+      localStorage.setItem('selectedCountryId', selectedCountryId);
     } else {
-      localStorage.removeItem('selectedLayerId');
+      localStorage.removeItem('selectedCountryId');
     }
-  }, [selectedLayerId]);
+  }, [selectedCountryId]);
 
   useEffect(() => {
-    if (!mapLoaded || !initialLayerIdRef.current) return;
-    const id = initialLayerIdRef.current;
-    initialLayerIdRef.current = null;
-    toggleLayer(id);
+    if (!mapLoaded || !initialCountryIdRef.current) return;
+    const id = initialCountryIdRef.current;
+    initialCountryIdRef.current = null;
+    toggleCountry(id);
   }, [mapLoaded]);
 
   // init map
@@ -570,28 +570,28 @@ export default function App(
   }, [showWeather, mapLoaded]);
 
 
-  // load layers
+  // load countries
   useEffect(() => {
     if (!mapLoaded) return;
-    async function loadLayers() {
+    async function loadCountries() {
       try {
-        const res = await fetch('https://vectrabackyard-3dmb6.ondigitalocean.app/layers');
+        const res = await fetch('https://vectrabackyard-3dmb6.ondigitalocean.app/countries');
         const data = await res.json();
         const sorted = [...data].sort((a, b) =>
           (a.name || a.title || '').localeCompare(b.name || b.title || '')
         );
-        setLayers(sorted);
+        setCountries(sorted);
       } catch (e) {
-        console.error('Failed to load layers', e);
+        console.error('Failed to load countries', e);
       }
     }
-    loadLayers();
+    loadCountries();
   }, [mapLoaded]);
 
   function clearOverlays(options = {}) {
     const { keepSelected = false } = options;
     setShowDialog(false);
-    setShowLayers(false);
+    setShowCountries(false);
     if (!keepSelected) {
       setSelected(null);
     }
@@ -615,7 +615,7 @@ export default function App(
 
     const destCoord = [parseFloat(dest.longitude), parseFloat(dest.latitude)];
     setRouteNoFlyZones([]);
-    const features = Object.values(layerFeaturesRef.current).flat();
+    const features = Object.values(countryFeaturesRef.current).flat();
     const hasStart =
       dest.startLatitude !== undefined && dest.startLongitude !== undefined;
     const bounds = new mapboxgl.LngLatBounds(destCoord, destCoord);
@@ -721,20 +721,20 @@ export default function App(
   function handleClearZone(zone) {
     const id = getZoneId(zone);
     const map = mapRef.current;
-    Object.entries(layerFeaturesRef.current).forEach(([layerId, feats]) => {
+    Object.entries(countryFeaturesRef.current).forEach(([countryId, feats]) => {
       const filtered = feats.filter(f => getZoneId(f) !== id);
       if (filtered.length !== feats.length) {
-        layerFeaturesRef.current[layerId] = filtered;
-        if (map && map.getSource(`uas-layer-${layerId}`)) {
-          map.getSource(`uas-layer-${layerId}`).setData({
+        countryFeaturesRef.current[countryId] = filtered;
+        if (map && map.getSource(`uas-country-${countryId}`)) {
+          map.getSource(`uas-country-${countryId}`).setData({
             type: 'FeatureCollection',
             features: filtered
           });
         }
       }
     });
-    const flattened = Object.values(layerFeaturesRef.current).flat();
-    setLayerFeatures(flattened);
+    const flattened = Object.values(countryFeaturesRef.current).flat();
+    setCountryFeatures(flattened);
     setRouteNoFlyZones(zones => zones.filter(z => getZoneId(z) !== id));
     const newCleared = [...clearedZoneIds, id];
     setClearedZoneIds(newCleared);
@@ -762,8 +762,8 @@ export default function App(
       }
       map.easeTo({ pitch: 0 });
     } else {
-      const layers = map.getStyle().layers;
-      const labelLayerId = layers.find(
+      const mapLayers = map.getStyle().layers;
+      const labelLayerId = mapLayers.find(
         l => l.type === 'symbol' && l.layout['text-field']
       )?.id;
       if (!map.getLayer('3d-buildings')) {
@@ -875,12 +875,12 @@ export default function App(
     mapRef.current.rotateTo(bearing + 90, { duration: 500 });
   }
 
-  function toggleLayers() {
-    if (showLayers) {
+  function toggleCountries() {
+    if (showCountries) {
       clearOverlays();
     } else {
       clearOverlays();
-      setShowLayers(true);
+      setShowCountries(true);
     }
   }
 
@@ -888,31 +888,31 @@ export default function App(
     setShowFeedback(v => !v);
   }
 
-  async function toggleLayer(id) {
+  async function toggleCountry(id) {
     if (!mapRef.current) return;
     const map = mapRef.current;
-    const fillId = `uas-layer-fill-${id}`;
-    const outlineId = `uas-layer-outline-${id}`;
-    const sourceId = `uas-layer-${id}`;
-    if (selectedLayerId && selectedLayerId !== id) {
-      const prevFill = `uas-layer-fill-${selectedLayerId}`;
-      const prevOutline = `uas-layer-outline-${selectedLayerId}`;
-      const prevSource = `uas-layer-${selectedLayerId}`;
+    const fillId = `uas-country-fill-${id}`;
+    const outlineId = `uas-country-outline-${id}`;
+    const sourceId = `uas-country-${id}`;
+    if (selectedCountryId && selectedCountryId !== id) {
+      const prevFill = `uas-country-fill-${selectedCountryId}`;
+      const prevOutline = `uas-country-outline-${selectedCountryId}`;
+      const prevSource = `uas-country-${selectedCountryId}`;
       if (map.getLayer(prevFill)) map.removeLayer(prevFill);
       if (map.getLayer(prevOutline)) map.removeLayer(prevOutline);
       if (map.getSource(prevSource)) map.removeSource(prevSource);
-      const prevHandlers = noFlyHandlersRef.current[selectedLayerId];
+      const prevHandlers = noFlyHandlersRef.current[selectedCountryId];
       if (prevHandlers) {
         map.off('click', prevFill, prevHandlers.click);
         map.off('mouseenter', prevFill, prevHandlers.mouseenter);
         map.off('mouseleave', prevFill, prevHandlers.mouseleave);
-        delete noFlyHandlersRef.current[selectedLayerId];
+        delete noFlyHandlersRef.current[selectedCountryId];
       }
-      delete layerFeaturesRef.current[selectedLayerId];
-      setLayerFeatures(Object.values(layerFeaturesRef.current).flat());
-      setSelectedLayerId(null);
+      delete countryFeaturesRef.current[selectedCountryId];
+      setCountryFeatures(Object.values(countryFeaturesRef.current).flat());
+      setSelectedCountryId(null);
     }
-    if (selectedLayerId === id) {
+    if (selectedCountryId === id) {
       if (map.getLayer(fillId)) map.removeLayer(fillId);
       if (map.getLayer(outlineId)) map.removeLayer(outlineId);
       if (map.getSource(sourceId)) map.removeSource(sourceId);
@@ -923,21 +923,21 @@ export default function App(
         map.off('mouseleave', fillId, handlers.mouseleave);
         delete noFlyHandlersRef.current[id];
       }
-      delete layerFeaturesRef.current[id];
-      setLayerFeatures(Object.values(layerFeaturesRef.current).flat());
-      setSelectedLayerId(null);
+      delete countryFeaturesRef.current[id];
+      setCountryFeatures(Object.values(countryFeaturesRef.current).flat());
+      setSelectedCountryId(null);
       return;
     }
 
     try {
-      const res = await fetch(`https://vectrabackyard-3dmb6.ondigitalocean.app/layers/${id}`);
-      const layerDetails = await res.json();
+      const res = await fetch(`https://vectrabackyard-3dmb6.ondigitalocean.app/countries/${id}`);
+      const countryDetails = await res.json();
       let features;
       try {
-        const firstParse = JSON.parse(layerDetails.content);
+        const firstParse = JSON.parse(countryDetails.content);
         features = Array.isArray(firstParse) ? firstParse : JSON.parse(firstParse);
       } catch (e) {
-        console.error('Failed to parse layer GeoJSON', e);
+        console.error('Failed to parse country GeoJSON', e);
         return;
       }
       const filtered = features
@@ -959,8 +959,8 @@ export default function App(
         })
         .filter(f => !clearedZoneIds.includes(getZoneId(f)));
       const geojson = { type: 'FeatureCollection', features: filtered };
-      layerFeaturesRef.current[id] = filtered;
-      setLayerFeatures(Object.values(layerFeaturesRef.current).flat());
+      countryFeaturesRef.current[id] = filtered;
+      setCountryFeatures(Object.values(countryFeaturesRef.current).flat());
       map.addSource(sourceId, { type: 'geojson', data: geojson });
       const colorExpression = [
         'case',
@@ -981,7 +981,7 @@ export default function App(
         paint: { 'line-color': colorExpression, 'line-width': 1.5 }
       });
 
-      // Orient the map to the bounds of the newly added layer
+      // Orient the map to the bounds of the newly added country
       if (filtered.length) {
         const [minLng, minLat, maxLng, maxLat] = bbox(geojson);
         map.stop();
@@ -1184,9 +1184,9 @@ export default function App(
         mouseenter: mouseEnterHandler,
         mouseleave: mouseLeaveHandler
       };
-      setSelectedLayerId(id);
+      setSelectedCountryId(id);
     } catch (e) {
-      console.error('Failed to load layer', e);
+      console.error('Failed to load country', e);
     }
   }
   function setManualRoute(startLat, startLng, destLat, destLng) {
@@ -1265,9 +1265,9 @@ export default function App(
         </button>
         <button
           className="glass-effect"
-          onClick={toggleLayers}
-          aria-label="Layers/No Fly Zones"
-          title="Layers/No Fly Zones"
+          onClick={toggleCountries}
+          aria-label="Countries/No Fly Zones"
+          title="Countries/No Fly Zones"
         >
           <Stack size={18} />
         </button>
@@ -1424,23 +1424,23 @@ export default function App(
           <button onClick={() => setShowKp(false)}>Close</button>
         </div>
       )}
-      {showLayers && (
-        <div className="dialog glass-effect layers-overlay">
-          <h3>Layers</h3>
+      {showCountries && (
+        <div className="dialog glass-effect countries-overlay">
+          <h3>Countries</h3>
           <ul>
-            {layers.map(l => (
-              <li key={l.id}>
+            {countries.map(c => (
+              <li key={c.id}>
                 <button
-                  className={`dest-btn${selectedLayerId === l.id ? ' active' : ''}`}
-                  onClick={() => toggleLayer(l.id)}
+                  className={`dest-btn${selectedCountryId === c.id ? ' active' : ''}`}
+                  onClick={() => toggleCountry(c.id)}
                 >
-                  {selectedLayerId === l.id ? (
+                  {selectedCountryId === c.id ? (
                     <Eye size={16} />
                   ) : (
                     <EyeSlash size={16} />
                   )}
-                  <span className="layer-name">
-                    {l.name || l.title || `Layer ${l.id}`}
+                  <span className="country-name">
+                    {c.name || c.title || `Country ${c.id}`}
                   </span>
                 </button>
               </li>

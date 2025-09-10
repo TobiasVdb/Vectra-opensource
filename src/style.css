@@ -830,22 +830,22 @@ body.light .nfz-popup-nav button {
   }
 }
 
-.layers-overlay {
+.countries-overlay {
   animation: fadeInUp 0.3s ease;
 }
 
-.layers-overlay ul {
+.countries-overlay ul {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.layers-overlay button {
+.countries-overlay button {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.layers-overlay .layer-name {
+.countries-overlay .country-name {
   flex: 1;
 }
