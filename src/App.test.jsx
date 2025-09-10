@@ -122,3 +122,25 @@ test('shows direct and avoiding distances', () => {
   expect(screen.getAllByText('Avoiding distance')[0]).toBeInTheDocument();
 });
 
+test('shows time on station', () => {
+  const selected = {
+    startLatitude: 0,
+    startLongitude: 0,
+    latitude: 1,
+    longitude: 1,
+  };
+  const path = [
+    [0, 0],
+    [0.5, 0.5],
+    [1, 1],
+  ];
+  render(
+    <App
+      initialSelected={selected}
+      initialFlightPath={path}
+      disableFocus={true}
+    />
+  );
+  expect(screen.getAllByText('Time on station')[0]).toBeInTheDocument();
+});
+
