@@ -80,10 +80,19 @@ describe('calculateAvoidingPath', () => {
     expect(pathIntersectsZone(path, multipolygon)).toBe(false);
   });
 
-  test('falls back to straight path when timeout exceeded', () => {
+  test('falls back to straight path and flags no-go when timeout exceeded', () => {
     const start = [-0.005, 0.005];
     const dest = [0.015, 0.005];
-    const { path } = calculateAvoidingPath(start, dest, [polygon], 0);
+    const { path, noGo } = calculateAvoidingPath(start, dest, [polygon], 0);
     expect(path).toEqual([start, dest]);
+    expect(noGo).toBe(true);
+  });
+
+  test('timeout without NFZ keeps flight go', () => {
+    const start = [-0.01, -0.01];
+    const dest = [-0.02, -0.02];
+    const { path, noGo } = calculateAvoidingPath(start, dest, [polygon], 0);
+    expect(path).toEqual([start, dest]);
+    expect(noGo).toBe(false);
   });
 });
