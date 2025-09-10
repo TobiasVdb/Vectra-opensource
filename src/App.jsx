@@ -25,7 +25,8 @@ import {
   decimalMinutesToTime,
   getEstimatedMissionTimeAtWhichDroneShouldReturnInMinutes,
   getEstimatedCurrentCapacityConsumedAtWhichDroneShouldReturn,
-  getDistanceMeters
+  getDistanceMeters,
+  calculateTimeOnStation,
 } from './utils.js';
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoic25pbGxvY21vdCIsImEiOiJjbThxY2U2MmIwYWE2MmtzOHhyNjdqMjZnIn0.3b-7Y5j4Uxy5kNCqcLaaYw';
@@ -172,6 +173,9 @@ export default function App(
     const returnTime = decimalMinutesToTime(
       getEstimatedMissionTimeAtWhichDroneShouldReturnInMinutes(distanceMeters)
     );
+    const timeOnStation = decimalMinutesToTime(
+      calculateTimeOnStation(distanceMeters)
+    );
     const directDistance =
       getDistanceMeters(startLat, startLng, destLat, destLng) / 1000;
     const directDistText = `${directDistance.toFixed(1)} km`;
@@ -180,6 +184,7 @@ export default function App(
       flight,
       returnCapacity,
       returnTime,
+      timeOnStation,
       directDistText,
       avoidDistText,
     };
@@ -1340,6 +1345,10 @@ export default function App(
                 )}
                 {flightInfo.returnCapacity.toFixed(2)} Ah
               </span>
+            </div>
+            <div className="info-row">
+              <span className="label">Time on station</span>
+              <span className="value">{flightInfo.timeOnStation}</span>
             </div>
             <div className="info-row">
               <span className="label">Return at mission time</span>
