@@ -575,22 +575,22 @@ export default function App(
   }, [showWeather, mapLoaded]);
 
 
-  // load countries
+  // load layers
   useEffect(() => {
     if (!mapLoaded) return;
-    async function loadCountries() {
+    async function loadLayers() {
       try {
-        const res = await fetch('https://vectrabackyard-3dmb6.ondigitalocean.app/countries');
+        const res = await fetch('https://vectrabackyard-3dmb6.ondigitalocean.app/layers');
         const data = await res.json();
         const sorted = [...data].sort((a, b) =>
           (a.name || a.title || '').localeCompare(b.name || b.title || '')
         );
         setCountries(sorted);
       } catch (e) {
-        console.error('Failed to load countries', e);
+        console.error('Failed to load layers', e);
       }
     }
-    loadCountries();
+    loadLayers();
   }, [mapLoaded]);
 
   function clearOverlays(options = {}) {
@@ -936,14 +936,14 @@ export default function App(
     }
 
     try {
-      const res = await fetch(`https://vectrabackyard-3dmb6.ondigitalocean.app/countries/${id}`);
+      const res = await fetch(`https://vectrabackyard-3dmb6.ondigitalocean.app/layers/${id}`);
       const countryDetails = await res.json();
       let features;
       try {
         const firstParse = JSON.parse(countryDetails.content);
         features = Array.isArray(firstParse) ? firstParse : JSON.parse(firstParse);
       } catch (e) {
-        console.error('Failed to parse country GeoJSON', e);
+        console.error('Failed to parse layer GeoJSON', e);
         return;
       }
       const filtered = features
@@ -1192,7 +1192,7 @@ export default function App(
       };
       setSelectedCountryId(id);
     } catch (e) {
-      console.error('Failed to load country', e);
+      console.error('Failed to load layer', e);
     }
   }
   function setManualRoute(startLat, startLng, destLat, destLng) {
