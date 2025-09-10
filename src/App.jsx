@@ -1376,6 +1376,19 @@ export default function App(
             </div>
           </div>
 
+          <p className="info-hint">
+            Double click on the map to set a different destination.
+          </p>
+          <button
+            className="back-link"
+            onClick={() => {
+              resetMission();
+              setShowDialog(true);
+            }}
+          >
+            Back to flight settings
+          </button>
+
           {routeNoFlyZones.length > 0 && (
             <div className="nfz-clearance">
               <h4>No Fly Zones</h4>

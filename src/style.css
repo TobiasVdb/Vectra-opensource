@@ -571,6 +571,16 @@ body.light .manual-entry button:hover:not(:disabled) {
   font-size: 14px;
 }
 
+.info-hint {
+  font-size: 12px;
+  margin: 4px 0;
+  color: #ccc;
+}
+
+body.light .info-hint {
+  color: #555;
+}
+
 .info-panel h3 {
   margin: 0 0 12px 0;
   color: #bbb;
