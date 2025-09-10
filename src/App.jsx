@@ -25,7 +25,8 @@ import {
   decimalMinutesToTime,
   getEstimatedMissionTimeAtWhichDroneShouldReturnInMinutes,
   getEstimatedCurrentCapacityConsumedAtWhichDroneShouldReturn,
-  getDistanceMeters
+  getDistanceMeters,
+  calculateTimeOnStation,
 } from './utils.js';
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoic25pbGxvY21vdCIsImEiOiJjbThxY2U2MmIwYWE2MmtzOHhyNjdqMjZnIn0.3b-7Y5j4Uxy5kNCqcLaaYw';
@@ -172,6 +173,9 @@ export default function App(
     const returnTime = decimalMinutesToTime(
       getEstimatedMissionTimeAtWhichDroneShouldReturnInMinutes(distanceMeters)
     );
+    const timeOnStation = decimalMinutesToTime(
+      calculateTimeOnStation(distanceMeters)
+    );
     const directDistance =
       getDistanceMeters(startLat, startLng, destLat, destLng) / 1000;
     const directDistText = `${directDistance.toFixed(1)} km`;
@@ -180,6 +184,7 @@ export default function App(
       flight,
       returnCapacity,
       returnTime,
+      timeOnStation,
       directDistText,
       avoidDistText,
     };
@@ -889,6 +894,7 @@ export default function App(
   }
 
   async function toggleCountry(id) {
+    id = String(id);
     if (!mapRef.current) return;
     const map = mapRef.current;
     const fillId = `uas-country-fill-${id}`;
@@ -1342,6 +1348,10 @@ export default function App(
               </span>
             </div>
             <div className="info-row">
+              <span className="label">Time on station</span>
+              <span className="value">{flightInfo.timeOnStation}</span>
+            </div>
+            <div className="info-row">
               <span className="label">Return at mission time</span>
               <span className={`value ${flightInfo.flight.timeOnStationBatteryCheck ? 'ok' : 'no'}`}>
                 {flightInfo.flight.timeOnStationBatteryCheck ? (
@@ -1435,6 +1445,7 @@ export default function App(
                   onClick={() => toggleCountry(c.id)}
                 >
                   {selectedCountryId === c.id ? (
+
                     <Eye size={16} />
                   ) : (
                     <EyeSlash size={16} />
