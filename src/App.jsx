@@ -147,6 +147,7 @@ export default function App(
   const [latError, setLatError] = useState('');
   const [lngError, setLngError] = useState('');
   const [flightPath, setFlightPath] = useState(initialFlightPath);
+  const [pathNoGo, setPathNoGo] = useState(false);
 
   const flightInfo = useMemo(() => {
     if (flightPath.length < 2 || !selected) return null;
@@ -167,6 +168,13 @@ export default function App(
       destLat,
       destLng
     );
+    if (pathNoGo) {
+      flight.allOk = false;
+      flight.noGoReason = [
+        ...(flight.noGoReason || []),
+        'nfzConflict',
+      ];
+    }
     const returnCapacity =
       PRACTICAL_BATTERY_CAPACITY -
       getEstimatedCurrentCapacityConsumedAtWhichDroneShouldReturn(distanceMeters);
@@ -188,7 +196,7 @@ export default function App(
       directDistText,
       avoidDistText,
     };
-  }, [flightPath, selected]);
+  }, [flightPath, selected, pathNoGo]);
 
   function handleManualStartLatChange(e) {
     const value = e.target.value;
@@ -248,6 +256,7 @@ export default function App(
     // Clear any active mission and remove associated map overlays
     setSelected(null);
     setFlightPath([]);
+    setPathNoGo(false);
     clearStart();
     clearDestination();
     const map = mapRef.current;
@@ -631,7 +640,7 @@ export default function App(
         parseFloat(dest.startLatitude)
       ];
       const circle = generateHoverCircle(destCoord);
-      const { path, intersected, explored } = calculateAvoidingPath(
+      const { path, intersected, explored, noGo } = calculateAvoidingPath(
         startCoord,
         destCoord,
         features
@@ -646,6 +655,7 @@ export default function App(
       );
       setRouteNoFlyZones(combined);
       setFlightPath(path);
+      setPathNoGo(noGo);
 
       const trialFeatures = explored.map(coords => ({
         type: 'Feature',
@@ -694,6 +704,7 @@ export default function App(
         geometry: { type: 'LineString', coordinates: hoverCircle }
       };
       setFlightPath([]);
+      setPathNoGo(false);
       hoverCircle.forEach(c => bounds.extend(c));
       if (map.getSource('flight-trials')) {
         map.getSource('flight-trials').setData({

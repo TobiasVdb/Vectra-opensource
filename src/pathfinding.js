@@ -38,7 +38,12 @@ export function calculateAvoidingPath(start, dest, zones = [], timeoutMs = 4000)
   const fallback = () => {
     const fallbackPath = [start, dest];
     const intersected = zones.filter(z => pathIntersectsZone(fallbackPath, z));
-    return { path: fallbackPath, intersected, explored: [] };
+    return {
+      path: fallbackPath,
+      intersected,
+      explored: [],
+      noGo: intersected.length > 0,
+    };
   };
 
   const checkTimeout = () => {
@@ -112,7 +117,7 @@ export function calculateAvoidingPath(start, dest, zones = [], timeoutMs = 4000)
   }
 
   const intersected = zones.filter(z => pathIntersectsZone(path, z));
-  return { path, intersected, explored: [] };
+  return { path, intersected, explored: [], noGo: false };
 }
 
 export default {
