@@ -88,7 +88,7 @@ test('clearing a zone removes it from route', () => {
   render(
     <App
       initialRouteNoFlyZones={[zone]}
-      initialLayerFeatures={{ test: [zone] }}
+      initialCountryFeatures={{ test: [zone] }}
       initialSelected={selected}
       initialFlightPath={path}
       disableFocus={true}
