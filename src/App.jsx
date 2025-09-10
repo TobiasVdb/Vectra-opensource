@@ -889,6 +889,7 @@ export default function App(
   }
 
   async function toggleLayer(id) {
+    id = String(id);
     if (!mapRef.current) return;
     const map = mapRef.current;
     const fillId = `uas-layer-fill-${id}`;
@@ -1431,10 +1432,10 @@ export default function App(
             {layers.map(l => (
               <li key={l.id}>
                 <button
-                  className={`dest-btn${selectedLayerId === l.id ? ' active' : ''}`}
+                  className={`dest-btn${selectedLayerId === String(l.id) ? ' active' : ''}`}
                   onClick={() => toggleLayer(l.id)}
                 >
-                  {selectedLayerId === l.id ? (
+                  {selectedLayerId === String(l.id) ? (
                     <Eye size={16} />
                   ) : (
                     <EyeSlash size={16} />
