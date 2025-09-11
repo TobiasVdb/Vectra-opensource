@@ -954,6 +954,11 @@ export default function App(
       delete countryFeaturesRef.current[selectedCountryId];
       setCountryFeatures(Object.values(countryFeaturesRef.current).flat());
       setSelectedCountryId(null);
+      try {
+        localStorage.removeItem('selectedCountryId');
+      } catch (e) {
+        console.error('Failed to remove saved country id', e);
+      }
     }
     if (selectedCountryId === id) {
       if (map.getLayer(fillId)) map.removeLayer(fillId);
@@ -969,6 +974,11 @@ export default function App(
       delete countryFeaturesRef.current[id];
       setCountryFeatures(Object.values(countryFeaturesRef.current).flat());
       setSelectedCountryId(null);
+      try {
+        localStorage.removeItem('selectedCountryId');
+      } catch (e) {
+        console.error('Failed to remove saved country id', e);
+      }
       return;
     }
 
@@ -1228,6 +1238,11 @@ export default function App(
         mouseleave: mouseLeaveHandler
       };
       setSelectedCountryId(id);
+      try {
+        localStorage.setItem('selectedCountryId', id);
+      } catch (e) {
+        console.error('Failed to save country id', e);
+      }
     } catch (e) {
       console.error('Failed to load layer', e);
     }
