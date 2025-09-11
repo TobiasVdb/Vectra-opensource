@@ -793,6 +793,44 @@ export default function App(
     });
   }
 
+  function recalcFlightPath() {
+    if (!selected) return;
+    const destCoord = [
+      parseFloat(selected.longitude),
+      parseFloat(selected.latitude)
+    ];
+    const features = Object.values(countryFeaturesRef.current).flat();
+    const hasStart =
+      selected.startLatitude !== undefined &&
+      selected.startLongitude !== undefined;
+    if (!hasStart) {
+      setRouteNoFlyZones([]);
+      setFlightPath([]);
+      setPathNoGo(false);
+      return;
+    }
+    const startCoord = [
+      parseFloat(selected.startLongitude),
+      parseFloat(selected.startLatitude)
+    ];
+    const { path, intersected, noGo } = calculateAvoidingPath(
+      startCoord,
+      destCoord,
+      features
+    );
+    const directPath = [startCoord, destCoord];
+    const directIntersected = features.filter(z =>
+      pathIntersectsZone(directPath, z)
+    );
+    const combined = [...intersected, ...directIntersected].filter(
+      (z, i, arr) =>
+        arr.findIndex(o => getZoneId(o) === getZoneId(z)) === i
+    );
+    setRouteNoFlyZones(combined);
+    setFlightPath(path);
+    setPathNoGo(noGo);
+  }
+
   function handleClearZone(zone) {
     const id = getZoneId(zone);
     const map = mapRef.current;
@@ -814,8 +852,12 @@ export default function App(
     setRouteNoFlyZones(remaining);
     const newCleared = [...clearedZoneIds, id];
     setClearedZoneIds(newCleared);
-    if (selected && !disableFocus) {
-      focusDestination(selected, newCleared);
+    if (selected) {
+      if (!disableFocus) {
+        focusDestination(selected, newCleared);
+      } else {
+        recalcFlightPath();
+      }
     } else {
       setPathNoGo(remaining.length > 0);
     }
