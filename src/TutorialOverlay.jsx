@@ -1,17 +1,38 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 export default function TutorialOverlay({ steps, stepIndex, onNext, onPrev, onClose }) {
   const [rect, setRect] = useState(null);
+  const tooltipRef = useRef(null);
+  const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
   const step = steps[stepIndex];
 
   useEffect(() => {
     const el = document.querySelector(step.selector);
     if (el) {
-      setRect(el.getBoundingClientRect());
+      const elRect = el.getBoundingClientRect();
+      setRect(elRect);
+      setTooltipPos({ top: elRect.bottom + 10, left: elRect.left });
     } else {
       setRect(null);
     }
   }, [step, stepIndex]);
+
+  useEffect(() => {
+    if (!rect || !tooltipRef.current) return;
+    const tooltipRect = tooltipRef.current.getBoundingClientRect();
+    let top = rect.bottom + 10;
+    if (top + tooltipRect.height > window.innerHeight) {
+      top = rect.top - tooltipRect.height - 10;
+      if (top < 10) top = window.innerHeight - tooltipRect.height - 10;
+    }
+    if (top < 10) top = 10;
+    let left = rect.left;
+    if (left + tooltipRect.width > window.innerWidth) {
+      left = window.innerWidth - tooltipRect.width - 10;
+    }
+    if (left < 10) left = 10;
+    setTooltipPos({ top, left });
+  }, [rect, stepIndex]);
 
   useEffect(() => {
     function handleKey(e) {
@@ -38,7 +59,11 @@ export default function TutorialOverlay({ steps, stepIndex, onNext, onPrev, onCl
         className="tutorial-highlight"
         style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
       />
-      <div className="tutorial-tooltip glass-effect" style={{ top: rect.bottom + 10, left: rect.left }}>
+      <div
+        ref={tooltipRef}
+        className="tutorial-tooltip glass-effect"
+        style={{ top: tooltipPos.top, left: tooltipPos.left }}
+      >
         <p>{step.text}</p>
         <div className="tutorial-buttons">
           <button className="secondary-btn" onClick={onClose}>
