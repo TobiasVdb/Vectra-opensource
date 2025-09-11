@@ -126,7 +126,8 @@ export default function App(
     initialCountryFeatures = {},
     initialSelected = null,
     initialFlightPath = [],
-    disableFocus = false
+    disableFocus = false,
+    initialPathNoGo = false
   } = {}
 ) {
   const mapContainer = useRef(null);
@@ -147,7 +148,7 @@ export default function App(
   const [latError, setLatError] = useState('');
   const [lngError, setLngError] = useState('');
   const [flightPath, setFlightPath] = useState(initialFlightPath);
-  const [pathNoGo, setPathNoGo] = useState(false);
+  const [pathNoGo, setPathNoGo] = useState(initialPathNoGo);
 
   const flightInfo = useMemo(() => {
     if (flightPath.length < 2 || !selected) return null;
@@ -751,11 +752,14 @@ export default function App(
     });
     const flattened = Object.values(countryFeaturesRef.current).flat();
     setCountryFeatures(flattened);
-    setRouteNoFlyZones(zones => zones.filter(z => getZoneId(z) !== id));
+    const remaining = routeNoFlyZones.filter(z => getZoneId(z) !== id);
+    setRouteNoFlyZones(remaining);
     const newCleared = [...clearedZoneIds, id];
     setClearedZoneIds(newCleared);
     if (selected && !disableFocus) {
       focusDestination(selected, newCleared);
+    } else {
+      setPathNoGo(remaining.length > 0);
     }
   }
 

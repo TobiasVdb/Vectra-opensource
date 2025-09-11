@@ -1,7 +1,7 @@
 import { vi, test, expect } from 'vitest';
 global.expect = expect;
 await import('@testing-library/jest-dom');
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from './App';
 
 vi.mock('mapbox-gl', () => {
@@ -69,7 +69,7 @@ vi.mock('mapbox-gl', () => {
   return { Map, Popup, Marker, default: { Map, Popup, Marker } };
 });
 
-test('clearing a zone removes it from route', () => {
+test('clearing a zone removes it from route and resets no-go status', async () => {
   const zone = {
     type: 'Feature',
     properties: { id: 'zone-1', name: 'Test Zone' },
@@ -78,12 +78,12 @@ test('clearing a zone removes it from route', () => {
   const selected = {
     startLatitude: 0,
     startLongitude: 0,
-    latitude: 1,
-    longitude: 1
+    latitude: 0,
+    longitude: 0.01,
   };
   const path = [
     [0, 0],
-    [1, 1]
+    [0, 0.01],
   ];
   render(
     <App
@@ -91,12 +91,16 @@ test('clearing a zone removes it from route', () => {
       initialCountryFeatures={{ test: [zone] }}
       initialSelected={selected}
       initialFlightPath={path}
+      initialPathNoGo={true}
       disableFocus={true}
     />
   );
+  expect(screen.getByText('Flight is NO GO')).toBeInTheDocument();
   const clearBtn = screen.getByText('Clear for this flight');
   fireEvent.click(clearBtn);
   expect(screen.queryByText('No Fly Zones')).toBeNull();
+  await waitFor(() => expect(screen.queryByText('Flight is NO GO')).toBeNull());
+  expect(screen.getByText('Flight is GO')).toBeInTheDocument();
 });
 
 test('hides avoiding distance when there are no no-fly zones', () => {
