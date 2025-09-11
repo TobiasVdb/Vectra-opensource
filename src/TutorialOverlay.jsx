@@ -41,11 +41,25 @@ export default function TutorialOverlay({ steps, stepIndex, onNext, onPrev, onCl
       <div className="tutorial-tooltip glass-effect" style={{ top: rect.bottom + 10, left: rect.left }}>
         <p>{step.text}</p>
         <div className="tutorial-buttons">
-          <button onClick={onClose}>Cancel (Esc)</button>
-          <button onClick={onPrev} disabled={stepIndex === 0}>
-            Previous (P)
+          <button className="secondary-btn" onClick={onClose}>
+            Cancel<kbd>Esc</kbd>
           </button>
-          <button onClick={onNext}>{isLast ? 'Finish' : 'Next (N)'}</button>
+          <button
+            className="secondary-btn"
+            onClick={onPrev}
+            disabled={stepIndex === 0}
+          >
+            Previous<kbd>P</kbd>
+          </button>
+          <button className="primary-btn" onClick={onNext}>
+            {isLast ? (
+              'Finish'
+            ) : (
+              <>
+                Next<kbd>N</kbd>
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>
