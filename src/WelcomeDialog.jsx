@@ -6,7 +6,7 @@ export default function WelcomeDialog({ onShowTutorial, onClose }) {
   return (
     <div className="welcome-overlay">
       <div className="welcome-dialog glass-effect">
-        <img src="/favicon.svg" alt="Vectra logo" className="welcome-logo" />
+        <img src="/images/favi2.png" alt="Vectra logo" className="welcome-logo" />
         <h2>Welcome to Vectra</h2>
         <p>Plan and visualize your drone missions.</p>
         <label className="welcome-checkbox">

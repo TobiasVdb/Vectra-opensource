@@ -924,6 +924,7 @@ body.light .nfz-popup-nav button {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   gap: 10px;
   padding: 20px;
   border-radius: 8px;
@@ -939,16 +940,25 @@ body.light .nfz-popup-nav button {
 .welcome-buttons {
   display: flex;
   gap: 8px;
-  justify-content: flex-end;
+  justify-content: center;
   width: 100%;
 }
 
+.welcome-buttons button {
+  background: #f7931e;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
 .welcome-checkbox {
-  align-self: flex-start;
   font-size: 14px;
   display: flex;
   align-items: center;
   gap: 6px;
+  justify-content: center;
+  width: 100%;
 }
 
 .tutorial-overlay {
