@@ -794,7 +794,8 @@ export default function App(
   }
 
   function recalcFlightPath() {
-    if (!selected) return;
+    if (!selected || !mapRef.current) return;
+    const map = mapRef.current;
     const destCoord = [
       parseFloat(selected.longitude),
       parseFloat(selected.latitude)
@@ -807,13 +808,26 @@ export default function App(
       setRouteNoFlyZones([]);
       setFlightPath([]);
       setPathNoGo(false);
+      const hoverCircle = generateHoverCircle(destCoord);
+      if (map.getSource('flight')) {
+        map.getSource('flight').setData({
+          type: 'Feature',
+          geometry: { type: 'LineString', coordinates: hoverCircle }
+        });
+      }
+      if (map.getSource('flight-trials')) {
+        map.getSource('flight-trials').setData({
+          type: 'FeatureCollection',
+          features: []
+        });
+      }
       return;
     }
     const startCoord = [
       parseFloat(selected.startLongitude),
       parseFloat(selected.startLatitude)
     ];
-    const { path, intersected, noGo } = calculateAvoidingPath(
+    const { path, intersected, explored, noGo } = calculateAvoidingPath(
       startCoord,
       destCoord,
       features
@@ -829,6 +843,41 @@ export default function App(
     setRouteNoFlyZones(combined);
     setFlightPath(path);
     setPathNoGo(noGo);
+
+    const hoverCircle = generateHoverCircle(destCoord);
+    const flightData = {
+      type: 'FeatureCollection',
+      features: [
+        { type: 'Feature', geometry: { type: 'LineString', coordinates: path } },
+        { type: 'Feature', geometry: { type: 'LineString', coordinates: hoverCircle } }
+      ]
+    };
+    if (map.getSource('flight')) {
+      map.getSource('flight').setData(flightData);
+    }
+
+    const trialFeatures = explored.map(coords => ({
+      type: 'Feature',
+      geometry: { type: 'LineString', coordinates: coords }
+    }));
+    const trialData = { type: 'FeatureCollection', features: trialFeatures };
+    if (map.getSource('flight-trials')) {
+      map.getSource('flight-trials').setData(trialData);
+    } else {
+      map.addSource('flight-trials', { type: 'geojson', data: trialData });
+      map.addLayer({
+        id: 'flight-trials',
+        type: 'line',
+        source: 'flight-trials',
+        layout: { 'line-cap': 'round' },
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': 2,
+          'line-dasharray': [1, 1],
+          'line-opacity': 0.15
+        }
+      });
+    }
   }
 
   function handleClearZone(zone) {
