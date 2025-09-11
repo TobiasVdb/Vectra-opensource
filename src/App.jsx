@@ -162,8 +162,14 @@ export default function App(
   const [pathNoGo, setPathNoGo] = useState(initialPathNoGo);
 
   const tutorialSteps = [
-    { selector: '.flights-panel', text: 'Use this panel to configure your flight.' },
-    { selector: '.map-container', text: 'View your mission on the map.' }
+    {
+      selector: '.flights-panel',
+      text: 'Use this panel to set up your manual flight.'
+    },
+    {
+      selector: '.top-right',
+      text: 'These buttons in the top right let you change the map, rotate the view, and access more tools.'
+    }
   ];
 
   const flightInfo = useMemo(() => {
@@ -1535,7 +1541,7 @@ export default function App(
       {showDialog && (
         <div className="dialog flights-panel glass-effect">
             <div className="flights-header">
-              <h3>Flights</h3>
+              <h3>Manual Flight</h3>
             </div>
           <div className="manual-entry">
             <div className={`coord-group${nextTarget === 'start' ? ' highlight' : ''}`}>
