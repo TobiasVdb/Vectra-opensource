@@ -531,7 +531,8 @@ export default function App(
     if (startSet) {
       const coord = [parseFloat(manualStartLng), parseFloat(manualStartLat)];
       if (startMarkerRef.current) {
-        startMarkerRef.current.setLngLat(coord);
+        // Reattach marker to map in case style changes recreated the map
+        startMarkerRef.current.setLngLat(coord).addTo(map);
       } else {
         startMarkerRef.current = new mapboxgl.Marker({ color: '#4caf50' })
           .setLngLat(coord)
@@ -545,7 +546,8 @@ export default function App(
     if (destSet) {
       const coord = [parseFloat(manualLng), parseFloat(manualLat)];
       if (destMarkerRef.current) {
-        destMarkerRef.current.setLngLat(coord);
+        // Ensure destination marker is added back to map after style switch
+        destMarkerRef.current.setLngLat(coord).addTo(map);
       } else {
         destMarkerRef.current = new mapboxgl.Marker({ color: '#e65100' })
           .setLngLat(coord)
