@@ -906,3 +906,85 @@ body.light .nfz-popup-nav button {
 .countries-overlay .country-name {
   flex: 1;
 }
+
+.welcome-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.welcome-dialog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px;
+  border-radius: 8px;
+  width: 280px;
+  color: #fff;
+}
+
+.welcome-logo {
+  width: 48px;
+  height: 48px;
+}
+
+.welcome-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.welcome-checkbox {
+  align-self: flex-start;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tutorial-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 150;
+}
+
+.tutorial-highlight {
+  position: absolute;
+  border: 2px solid #f7931e;
+  border-radius: 4px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.tutorial-tooltip {
+  position: absolute;
+  max-width: 300px;
+  padding: 10px;
+  border-radius: 8px;
+  color: #fff;
+  pointer-events: auto;
+}
+
+body.light .tutorial-tooltip {
+  color: #000;
+}
+
+.tutorial-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}

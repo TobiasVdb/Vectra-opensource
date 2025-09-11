@@ -15,6 +15,8 @@ import {
   EyeSlash
 } from '@phosphor-icons/react';
 import FeedbackDialog from './FeedbackDialog';
+import WelcomeDialog from './WelcomeDialog';
+import TutorialOverlay from './TutorialOverlay';
 import { isZoneActive } from './fetchActiveGeozones.js';
 import { bbox } from '@turf/turf';
 import { calculateAvoidingPath, pathIntersectsZone } from './pathfinding.js';
@@ -138,6 +140,15 @@ export default function App(
   const destMarkerRef = useRef(null);
   const [selected, setSelected] = useState(initialSelected);
   const [showDialog, setShowDialog] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(() => {
+    try {
+      return localStorage.getItem('hideWelcome') === 'true' ? false : true;
+    } catch {
+      return true;
+    }
+  });
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
   const [manualStartLat, setManualStartLat] = useState('');
   const [manualStartLng, setManualStartLng] = useState('');
   const [manualLat, setManualLat] = useState('');
@@ -148,6 +159,11 @@ export default function App(
   const [lngError, setLngError] = useState('');
   const [flightPath, setFlightPath] = useState(initialFlightPath);
   const [pathNoGo, setPathNoGo] = useState(false);
+
+  const tutorialSteps = [
+    { selector: '.flights-panel', text: 'Use this panel to configure your flight.' },
+    { selector: '.map-container', text: 'View your mission on the map.' }
+  ];
 
   const flightInfo = useMemo(() => {
     if (flightPath.length < 2 || !selected) return null;
@@ -1221,6 +1237,33 @@ export default function App(
     focusDestination(dest);
   }
 
+  function handleWelcomeClose(startTutorial, dontShow) {
+    try {
+      if (dontShow) {
+        localStorage.setItem('hideWelcome', 'true');
+      } else {
+        localStorage.removeItem('hideWelcome');
+      }
+    } catch {}
+    setShowWelcome(false);
+    if (startTutorial) {
+      setShowTutorial(true);
+      setTutorialStep(0);
+    }
+  }
+
+  function handleNextTutorial() {
+    if (tutorialStep < tutorialSteps.length - 1) {
+      setTutorialStep(tutorialStep + 1);
+    } else {
+      setShowTutorial(false);
+    }
+  }
+
+  function handlePrevTutorial() {
+    setTutorialStep(s => Math.max(0, s - 1));
+  }
+
   const nextTarget = !manualStartLat || !manualStartLng ? 'start' : 'dest';
 
   return (
@@ -1593,6 +1636,21 @@ export default function App(
             </div>
           </div>
         </div>
+      )}
+      {showWelcome && (
+        <WelcomeDialog
+          onShowTutorial={dontShow => handleWelcomeClose(true, dontShow)}
+          onClose={dontShow => handleWelcomeClose(false, dontShow)}
+        />
+      )}
+      {showTutorial && (
+        <TutorialOverlay
+          steps={tutorialSteps}
+          stepIndex={tutorialStep}
+          onNext={handleNextTutorial}
+          onPrev={handlePrevTutorial}
+          onClose={() => setShowTutorial(false)}
+        />
       )}
     </>
   );
