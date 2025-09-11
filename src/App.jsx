@@ -1298,8 +1298,8 @@ export default function App(
         <button
           className="glass-effect"
           onClick={cycleMapStyle}
-          aria-label="Map type"
-          title="Map type"
+          aria-label="Change map style"
+          title="Change map style"
         >
           <NextIcon size={18} />
         </button>
@@ -1307,8 +1307,8 @@ export default function App(
           <button
             className="kp-pill glass-effect"
             disabled
-            aria-label="Geomagnetic activity (Pro only)"
-            title="Geomagnetic activity (Pro only)"
+            aria-label="View geomagnetic activity (Pro only)"
+            title="View geomagnetic activity (Pro only)"
           >
             kp
             <span className="pro-tag">Pro</span>
@@ -1317,8 +1317,8 @@ export default function App(
         <button
           className="btn-3d glass-effect"
           disabled
-          aria-label="Camera mode (Pro only)"
-          title="Camera mode (Pro only)"
+          aria-label="Toggle 3D camera (Pro only)"
+          title="Toggle 3D camera (Pro only)"
         >
           3D
           <span className="pro-tag">Pro</span>
@@ -1326,23 +1326,23 @@ export default function App(
         <button
           className="glass-effect"
           onClick={rotateMap}
-          aria-label="Rotate camera"
-          title="Rotate camera"
+          aria-label="Rotate view"
+          title="Rotate view"
         >
           <ArrowClockwise size={18} />
         </button>
         <button
           className="glass-effect"
           onClick={toggleFlights}
-          aria-label="Flights"
-          title="Flights"
+          aria-label="Open flights panel"
+          title="Open flights panel"
         >
           <Airplane size={18} />
         </button>
         <button
           className="glass-effect"
-          aria-label="Weather (Pro only)"
-          title="Weather (Pro only)"
+          aria-label="View weather (Pro only)"
+          title="View weather (Pro only)"
           disabled
         >
           <Cloud size={18} />
@@ -1351,8 +1351,8 @@ export default function App(
         <button
           className="glass-effect"
           onClick={toggleCountries}
-          aria-label="Countries/No Fly Zones"
-          title="Countries/No Fly Zones"
+          aria-label="Toggle countries and no-fly zones"
+          title="Toggle countries and no-fly zones"
         >
           <Stack size={18} />
         </button>
@@ -1360,7 +1360,8 @@ export default function App(
         <button
           className="glass-effect"
           onClick={toggleFeedback}
-          aria-label="Feedback"
+          aria-label="Send feedback"
+          title="Send feedback"
         >
           <ChatCenteredText size={18} />
         </button>

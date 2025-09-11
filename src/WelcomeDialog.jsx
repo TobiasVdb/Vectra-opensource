@@ -18,8 +18,12 @@ export default function WelcomeDialog({ onShowTutorial, onClose }) {
           Don't show this again
         </label>
         <div className="welcome-buttons">
-          <button onClick={() => onShowTutorial(dontShow)}>Show Tutorial</button>
-          <button onClick={() => onClose(dontShow)}>Close</button>
+          <button className="primary-btn" onClick={() => onShowTutorial(dontShow)}>
+            Show Tutorial
+          </button>
+          <button className="secondary-btn" onClick={() => onClose(dontShow)}>
+            Close
+          </button>
         </div>
       </div>
     </div>

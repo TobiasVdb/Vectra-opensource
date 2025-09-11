@@ -945,7 +945,6 @@ body.light .nfz-popup-nav button {
 }
 
 .welcome-buttons button {
-  background: #f7931e;
   border: none;
   padding: 8px 12px;
   border-radius: 4px;
@@ -997,4 +996,42 @@ body.light .tutorial-tooltip {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 8px;
+}
+
+.primary-btn,
+.secondary-btn {
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.primary-btn {
+  background: #f7931e;
+  color: #000;
+}
+
+.secondary-btn {
+  background: #555;
+  color: #fff;
+}
+
+body.light .secondary-btn {
+  background: #ddd;
+  color: #000;
+}
+
+kbd {
+  background: #333;
+  color: #fff;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: monospace;
+  margin-left: 4px;
+}
+
+body.light kbd {
+  background: #eee;
+  color: #000;
 }

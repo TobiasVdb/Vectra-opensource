@@ -73,7 +73,7 @@ test('layers are sorted by name', async () => {
   global.fetch = fetchMock;
 
   render(<App />);
-  const countriesBtn = await screen.findByLabelText('Countries/No Fly Zones');
+  const countriesBtn = await screen.findByLabelText('Toggle countries and no-fly zones');
   await waitFor(() =>
     expect(fetchMock).toHaveBeenCalledWith(
       'https://vectrabackyard-3dmb6.ondigitalocean.app/layers'
