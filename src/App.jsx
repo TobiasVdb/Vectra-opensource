@@ -160,18 +160,6 @@ export default function App(
   const [lngError, setLngError] = useState('');
   const [flightPath, setFlightPath] = useState(initialFlightPath);
   const [pathNoGo, setPathNoGo] = useState(initialPathNoGo);
-
-  const tutorialSteps = [
-    {
-      selector: '.flights-panel',
-      text: 'Use this panel to set up your manual flight.'
-    },
-    {
-      selector: '.top-right',
-      text: 'These buttons in the top right let you change the map, rotate the view, and access more tools.'
-    }
-  ];
-
   const flightInfo = useMemo(() => {
     if (flightPath.length < 2 || !selected) return null;
     const startLat = parseFloat(selected.startLatitude);
@@ -308,6 +296,52 @@ export default function App(
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showWeather, setShowWeather] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+
+  const tutorialSteps = useMemo(
+    () => [
+      {
+        selector: '.flights-panel',
+        text: 'Use this panel to set up your manual flight.'
+      },
+      {
+        selector: '.top-right button[aria-label="Change map style"]',
+        text: 'Cycle through the available map styles.'
+      },
+      ...(kpData
+        ? [
+            {
+              selector: '.top-right .kp-pill',
+              text: 'View geomagnetic activity details (Pro only).'
+            }
+          ]
+        : []),
+      {
+        selector: '.top-right button[aria-label="Toggle 3D camera (Pro only)"]',
+        text: 'Toggle the 3D camera view (Pro only).'
+      },
+      {
+        selector: '.top-right button[aria-label="Rotate view"]',
+        text: 'Rotate the map view.'
+      },
+      {
+        selector: '.top-right button[aria-label="Open flights panel"]',
+        text: 'Open the flights panel.'
+      },
+      {
+        selector: '.top-right button[aria-label="View weather (Pro only)"]',
+        text: 'Check the weather forecast (Pro only).'
+      },
+      {
+        selector: '.top-right button[aria-label="Toggle countries and no-fly zones"]',
+        text: 'Show or hide countries and no-fly zones.'
+      },
+      {
+        selector: '.top-right button[aria-label="Send feedback"]',
+        text: 'Send feedback to the developers.'
+      }
+    ],
+    [kpData]
+  );
 
   useEffect(() => {
     if (selected?.mission_name !== 'Manual') return;
