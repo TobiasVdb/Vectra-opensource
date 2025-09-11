@@ -904,9 +904,8 @@ export default function App(
     if (selected) {
       if (!disableFocus) {
         focusDestination(selected, newCleared);
-      } else {
-        recalcFlightPath();
       }
+      recalcFlightPath();
     } else {
       setPathNoGo(remaining.length > 0);
     }
