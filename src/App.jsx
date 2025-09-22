@@ -268,6 +268,8 @@ export default function App(
     setSelected(null);
     setFlightPath([]);
     setPathNoGo(false);
+    setClearedZoneIds([]);
+    setClearedZoneMap({});
     clearStart();
     clearDestination();
     const map = mapRef.current;
@@ -292,6 +294,7 @@ export default function App(
   const [routeNoFlyZones, setRouteNoFlyZones] = useState(
     initialRouteNoFlyZones
   );
+  const [clearedZoneMap, setClearedZoneMap] = useState({});
   const [clearedZoneIds, setClearedZoneIds] = useState([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showWeather, setShowWeather] = useState(false);
@@ -674,10 +677,15 @@ export default function App(
     }
   }
 
-  function focusDestination(dest, clearedIdsOverride) {
+  function focusDestination(dest, clearedIdsOverride, clearedZonesOverride) {
     const isNewDest = dest !== selected;
     clearOverlays();
     setSelected(dest);
+    if (clearedZonesOverride !== undefined) {
+      setClearedZoneMap(clearedZonesOverride);
+    } else if (isNewDest && clearedIdsOverride === undefined) {
+      setClearedZoneMap({});
+    }
     if (isNewDest && clearedIdsOverride === undefined) {
       setClearedZoneIds([]);
     }
@@ -764,6 +772,9 @@ export default function App(
       };
       setFlightPath([]);
       setPathNoGo(false);
+      if (clearedZonesOverride === undefined) {
+        setClearedZoneMap({});
+      }
       hoverCircle.forEach(c => bounds.extend(c));
       if (map.getSource('flight-trials')) {
         map.getSource('flight-trials').setData({
@@ -808,6 +819,7 @@ export default function App(
       setRouteNoFlyZones([]);
       setFlightPath([]);
       setPathNoGo(false);
+      setClearedZoneMap({});
       const hoverCircle = generateHoverCircle(destCoord);
       if (map.getSource('flight')) {
         map.getSource('flight').setData({
@@ -882,32 +894,98 @@ export default function App(
 
   function handleClearZone(zone) {
     const id = getZoneId(zone);
+    if (clearedZoneIds.includes(id)) return;
     const map = mapRef.current;
+    const removedByCountry = [];
     Object.entries(countryFeaturesRef.current).forEach(([countryId, feats]) => {
+      const match = feats.find(f => getZoneId(f) === id);
+      if (!match) return;
+      removedByCountry.push({ countryId, feature: match });
       const filtered = feats.filter(f => getZoneId(f) !== id);
-      if (filtered.length !== feats.length) {
-        countryFeaturesRef.current[countryId] = filtered;
-        if (map && map.getSource(`uas-country-${countryId}`)) {
-          map.getSource(`uas-country-${countryId}`).setData({
-            type: 'FeatureCollection',
-            features: filtered
-          });
-        }
+      countryFeaturesRef.current[countryId] = filtered;
+      if (map && map.getSource(`uas-country-${countryId}`)) {
+        map.getSource(`uas-country-${countryId}`).setData({
+          type: 'FeatureCollection',
+          features: filtered
+        });
       }
     });
     const flattened = Object.values(countryFeaturesRef.current).flat();
     setCountryFeatures(flattened);
+    const routeIndex = routeNoFlyZones.findIndex(z => getZoneId(z) === id);
     const remaining = routeNoFlyZones.filter(z => getZoneId(z) !== id);
     setRouteNoFlyZones(remaining);
-    const newCleared = [...clearedZoneIds, id];
-    setClearedZoneIds(newCleared);
-    if (selected) {
-      if (!disableFocus) {
-        focusDestination(selected, newCleared);
+    const storedFeature = removedByCountry[0]?.feature || zone;
+    const countryIds = Array.from(
+      new Set(removedByCountry.map(entry => entry.countryId))
+    );
+    const updatedClearedMap = {
+      ...clearedZoneMap,
+      [id]: { zone: storedFeature, countryIds, routeIndex }
+    };
+    setClearedZoneMap(updatedClearedMap);
+    setClearedZoneIds(prev => {
+      if (prev.includes(id)) {
+        if (selected && !disableFocus) {
+          focusDestination(selected, prev, updatedClearedMap);
+        }
+        return prev;
       }
+      const next = [...prev, id];
+      if (selected && !disableFocus) {
+        focusDestination(selected, next, updatedClearedMap);
+      }
+      return next;
+    });
+    if (selected) {
       recalcFlightPath();
     } else {
       setPathNoGo(remaining.length > 0);
+    }
+  }
+
+  function handleUndoClearZone(zoneId) {
+    const entry = clearedZoneMap[zoneId];
+    if (!entry) return;
+    const map = mapRef.current;
+    const { zone, countryIds, routeIndex } = entry;
+    countryIds.forEach(countryId => {
+      const current = countryFeaturesRef.current[countryId] || [];
+      if (!current.some(f => getZoneId(f) === zoneId)) {
+        countryFeaturesRef.current[countryId] = [...current, zone];
+      }
+      if (map && map.getSource(`uas-country-${countryId}`)) {
+        map.getSource(`uas-country-${countryId}`).setData({
+          type: 'FeatureCollection',
+          features: countryFeaturesRef.current[countryId]
+        });
+      }
+    });
+    setCountryFeatures(Object.values(countryFeaturesRef.current).flat());
+    setRouteNoFlyZones(prev => {
+      if (prev.some(z => getZoneId(z) === zoneId)) {
+        return prev;
+      }
+      if (Number.isInteger(routeIndex) && routeIndex >= 0 && routeIndex <= prev.length) {
+        const next = [...prev];
+        next.splice(routeIndex, 0, zone);
+        return next;
+      }
+      return [...prev, zone];
+    });
+    const { [zoneId]: _, ...restCleared } = clearedZoneMap;
+    setClearedZoneIds(prev => {
+      const next = prev.filter(id => id !== zoneId);
+      if (selected && !disableFocus) {
+        focusDestination(selected, next, restCleared);
+      }
+      return next;
+    });
+    setClearedZoneMap(restCleared);
+    if (selected) {
+      recalcFlightPath();
+    } else {
+      setPathNoGo(true);
     }
   }
 
@@ -1607,7 +1685,7 @@ export default function App(
             Back to flight settings
           </button>
 
-          {routeNoFlyZones.length > 0 && (
+          {(routeNoFlyZones.length > 0 || clearedZoneIds.length > 0) && (
             <div className="nfz-clearance">
               <h4>No Fly Zones</h4>
               <p>
@@ -1626,6 +1704,29 @@ export default function App(
                   </div>
                 );
               })}
+              {clearedZoneIds
+                .map(id => ({ id, data: clearedZoneMap[id] }))
+                .filter(entry => entry.data?.zone)
+                .map(({ id, data }) => {
+                  const name =
+                    data.zone?.properties?.name ||
+                    data.zone?.properties?.id ||
+                    'Unnamed';
+                  return (
+                    <div key={id} className="nfz-item cleared">
+                      <div className="nfz-item-details">
+                        <span>{name}</span>
+                        <span className="nfz-status">Cleared</span>
+                      </div>
+                      <button
+                        className="link-button"
+                        onClick={() => handleUndoClearZone(id)}
+                      >
+                        Undo
+                      </button>
+                    </div>
+                  );
+                })}
             </div>
           )}
         </div>
