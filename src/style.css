@@ -773,6 +773,46 @@ body.light .nfz-popup-nav button {
   font-size: 12px;
 }
 
+.nfz-item.cleared {
+  border-color: #4caf50;
+  align-items: flex-start;
+}
+
+.nfz-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nfz-status {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #4caf50;
+  letter-spacing: 0.5px;
+}
+
+.nfz-item .link-button {
+  background: none;
+  border: none;
+  color: #f7931e;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  font-size: 12px;
+}
+
+body.light .nfz-item.cleared {
+  border-color: #2e7d32;
+}
+
+body.light .nfz-status {
+  color: #2e7d32;
+}
+
+body.light .nfz-item .link-button {
+  color: #d06a00;
+}
+
 .mapboxgl-ctrl-logo,
 .mapboxgl-ctrl-attrib {
   display: none !important;
