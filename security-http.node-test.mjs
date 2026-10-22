@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { createHash } from 'node:crypto';
-import { installSecurityObserver, classify } from './security-http.mjs';
+import { installSecurityObserver, classify, blockedProbe, createRequestLimiter } from './security-http.mjs';
 
 test('portable request observer protects its feed, omits query secrets, and uses the documented App Platform client header', async () => {
   const key = 'test-only-observer-key';
@@ -20,10 +20,40 @@ test('portable request observer protects its feed, omits query secrets, and uses
     const data = await response.json();
     assert.equal(data.events.length, 1); assert.equal(data.events[0].ip, '87.58.199.133');
     assert.equal(data.events[0].path, '/.env'); assert.equal(data.events[0].port, null);
-    assert.equal(data.events[0].status, 404); assert.equal(data.events[0].target, 'App');
+    assert.equal(data.events[0].status, 403); assert.equal(data.events[0].target, 'App');
     assert.ok(!JSON.stringify(data).includes('must-not-be-stored'));
     const next = await (await fetch(base+'/__directorate_security?cursor='+encodeURIComponent(data.cursor), { headers: { Authorization: 'Bearer '+key } })).json();
     assert.equal(next.events.length, 0);
     assert.equal(classify('/.well-known/security.txt'), null);
   } finally { restore(); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
+});
+
+test('rejects secret and exploit paths before application handling while preserving normal routes and ACME', async () => {
+  const key = 'test-only-guard-key';
+  const restore = installSecurityObserver({ sourceId: 'guard', keyHash: createHash('sha256').update(key).digest('hex'), digitalOcean: true,
+    bindings: [], fallbackTarget: 'App' });
+  let applicationCalls = 0;
+  const server = http.createServer((_req, res) => { applicationCalls++; res.end('legitimate application'); });
+  server.listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    for (const path of ['/.env', '/api/.env.production', '/%252e%2565%256e%2576', '/.git/config', '/.aws/credentials', '/.npmrc', '/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php', '/_ignition/execute-solution', '/actuator/env', '/'+ 'prefix/'.repeat(90) + '.env']) {
+      const response = await fetch(base + path);
+      assert.equal(response.status, 403, path); assert.equal(response.headers.get('cache-control'), 'no-store');
+    }
+    assert.equal(applicationCalls, 0);
+    assert.equal((await fetch(base + '/.env', { method: 'HEAD' })).status, 403);
+    for (const path of ['/', '/admin', '/api/health', '/.well-known/acme-challenge/test', '/.well-known/security.txt', '/uploads/photo.png', '/api/devices']) assert.equal((await fetch(base + path)).status, 200, path);
+    assert.equal(applicationCalls, 7);
+    assert.equal(blockedProbe('/cgi-bin/%252e%252e/etc/passwd'), 'traversal');
+    assert.equal(blockedProbe('/images/foo%20bar.png'), null);
+  } finally { restore(); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
+});
+
+test('rate limiter bounds bursts, refills tokens and keeps memory bounded under source churn', () => {
+  let time = 0;
+  const allow = createRequestLimiter({ rate: 2, burst: 2, maxKeys: 2, now: () => time });
+  assert.equal(allow('a'), true); assert.equal(allow('a'), true); assert.equal(allow('a'), false);
+  time = 500; assert.equal(allow('a'), true); assert.equal(allow('a'), false);
+  allow('b'); allow('c'); assert.equal(allow('a'), true);
 });
